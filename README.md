@@ -24,6 +24,12 @@ drives uploads, monitoring, and reports.
 - `static/` (auto) public files if needed.
 - `scripts/run_dev.sh` local dev launcher.
 
+## Before you start (weights are required)
+This repo does not include model weights. Ask the author for the weights and
+place them under `model_weights/`. Filenames are read from `.env`:
+- `YOLO_WEIGHTS` for tunnel face segmentation (default `yolo_best.pt`)
+- `CRACK_YOLO_WEIGHTS` for crack detection (default `crack_best.pt`)
+
 ## Quick start (local dev)
 Prereqs: Python 3.12, Node 20+, and `uv` installed.
 
@@ -74,3 +80,11 @@ Key environment variables (see `.env.example`):
 ## Notes
 - The database is SQLite by default and is initialized on startup.
 - The default admin user is created automatically if missing.
+
+## Troubleshooting
+- `YOLO weights not found` means the file is missing in `model_weights/` or the
+  filename in `.env` does not match the actual file.
+- `SAM2 skipped: missing config/checkpoint files` is expected if you did not
+  provide SAM2 assets; the pipeline will run with YOLO masks only.
+- If the backend starts but analysis fails, verify the two required weight files
+  and their names.

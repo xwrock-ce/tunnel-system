@@ -8,6 +8,36 @@ cd "$PROJECT_DIR"
 
 echo "=== Tunnel Excavation Detection System - Development Mode ==="
 
+# Check model weights (non-blocking)
+MODEL_DIR="$PROJECT_DIR/model_weights"
+YOLO_WEIGHTS_FILE="yolo_best.pt"
+CRACK_WEIGHTS_FILE="crack_best.pt"
+
+if [ -f ".env" ]; then
+    YOLO_FROM_ENV="$(grep -E '^YOLO_WEIGHTS=' .env | tail -n1 | cut -d= -f2- | tr -d '\"' | tr -d "'")"
+    CRACK_FROM_ENV="$(grep -E '^CRACK_YOLO_WEIGHTS=' .env | tail -n1 | cut -d= -f2- | tr -d '\"' | tr -d "'")"
+    if [ -n "$YOLO_FROM_ENV" ]; then
+        YOLO_WEIGHTS_FILE="$YOLO_FROM_ENV"
+    fi
+    if [ -n "$CRACK_FROM_ENV" ]; then
+        CRACK_WEIGHTS_FILE="$CRACK_FROM_ENV"
+    fi
+fi
+
+MISSING_WEIGHTS=false
+if [ ! -f "$MODEL_DIR/$YOLO_WEIGHTS_FILE" ]; then
+    echo "WARNING: missing YOLO weights: $MODEL_DIR/$YOLO_WEIGHTS_FILE"
+    MISSING_WEIGHTS=true
+fi
+if [ ! -f "$MODEL_DIR/$CRACK_WEIGHTS_FILE" ]; then
+    echo "WARNING: missing crack weights: $MODEL_DIR/$CRACK_WEIGHTS_FILE"
+    MISSING_WEIGHTS=true
+fi
+if [ "$MISSING_WEIGHTS" = true ]; then
+    echo "WARNING: model weights are required for analysis."
+    echo "Place files under $MODEL_DIR or update .env (YOLO_WEIGHTS/CRACK_YOLO_WEIGHTS)."
+fi
+
 # Check if backend virtual environment exists
 if [ ! -d "backend/.venv" ]; then
     echo "Creating backend virtual environment..."
