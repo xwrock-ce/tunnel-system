@@ -1,0 +1,425 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+:root {
+  --primary-color: #2563eb;
+  --bg-dark: #0f172a;
+  --bg-light: #f8fafc;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-light);
+  color: #334155;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* --- New Login Page Styles --- */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-background {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1519817914152-22d216bb9170?auto=format&fit=crop&q=80&w=2865');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.login-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 100%);
+  z-index: 1;
+  backdrop-filter: blur(4px);
+}
+
+.login-brand {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.brand-text {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.login-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.login-slogan {
+  display: none;
+  flex: 1;
+  color: white;
+  padding-right: 64px;
+}
+
+@media (min-width: 1024px) {
+  .login-slogan {
+    display: block;
+    animation: fadeIn 0.8s ease-out;
+  }
+}
+
+.slogan-title {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.03em;
+}
+
+.slogan-desc {
+  font-size: 18px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.feature-tags {
+  display: flex;
+  gap: 12px;
+}
+
+.feature-tag {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.6s ease-out;
+}
+
+.login-input input {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.login-btn {
+  height: 48px;
+  font-size: 16px;
+  background: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  border: none;
+}
+.login-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.login-page-footer {
+  position: absolute;
+  bottom: 24px;
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  z-index: 10;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Main Layout Styles --- */
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-sider {
+  background: #0f172a !important; /* Slate 900 */
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.sidebar-logo-container {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.logo-box {
+  width: 32px;
+  height: 32px;
+  background: var(--primary-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  margin-left: 12px;
+  color: white;
+}
+.logo-text h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+.logo-text span {
+  font-size: 10px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.menu-container {
+  padding: 16px 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.app-menu {
+  background: transparent !important;
+  border: none !important;
+}
+
+.app-menu .ant-menu-item {
+  border-radius: 8px;
+  margin-bottom: 4px;
+  color: #94a3b8 !important;
+}
+
+.app-menu .ant-menu-item:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.app-menu .ant-menu-item-selected {
+  background: var(--primary-color) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.app-menu .ant-menu-submenu-title {
+  color: #94a3b8 !important;
+}
+.app-menu .ant-menu-submenu-title:hover {
+  color: white !important;
+}
+
+.sidebar-user-section {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.user-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.user-card.collapsed {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.user-info {
+  margin-left: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.user-info .username {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.user-info .role {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.app-header {
+  padding: 0 24px !important;
+  height: 64px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  z-index: 40;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+}
+
+.project-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  min-width: 240px;
+  height: 36px;
+}
+.project-selector-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 16px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-search {
+  width: 200px;
+  background: #f8fafc;
+  border-radius: 6px;
+  margin-right: 8px;
+  transition: width 0.3s;
+}
+.header-search:focus-within {
+  width: 280px;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.action-btn {
+  color: #64748b;
+}
+.action-btn:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+/* --- Common Components --- */
+.kpi-card {
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-badge.success { background: #dcfce7; color: #166534; }
+.status-badge.warning { background: #fef9c3; color: #854d0e; }
+.status-badge.error { background: #fee2e2; color: #991b1b; }
+.status-badge.neutral { background: #f1f5f9; color: #475569; }
+.status-badge.processing { background: #e0f2fe; color: #075985; }
+
+/* Dashboard Chart container */
+.chart-container {
+  height: 300px;
+  width: 100%;
+}

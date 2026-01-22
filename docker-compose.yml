@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - tunnel-net
+    restart: unless-stopped
+
+  # Backend (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./model_weights:/app/model_weights:ro
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+      - tunnel_db:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
+      - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}
+      - DEBUG=false
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+    networks:
+      - tunnel-net
+    restart: unless-stopped
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  tunnel_db:
+
+networks:
+  tunnel-net:
+    driver: bridge

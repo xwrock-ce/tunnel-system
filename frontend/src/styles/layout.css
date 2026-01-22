@@ -1,0 +1,28 @@
+/* Custom styles for MainLayout components */
+
+.header-search-input .ant-input {
+  background-color: #f8fafc !important;
+  transition: all 0.3s;
+}
+
+.header-search-input .ant-input:focus {
+  background-color: #fff !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.header-search-input .ant-input-wrapper {
+  background-color: #f8fafc;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+}
+
+.header-search-input:hover .ant-input-wrapper {
+  border-color: #d9d9d9;
+}
+
+.header-search-input:focus-within .ant-input-wrapper {
+  background-color: #fff;
+  border-color: #1677ff;
+}

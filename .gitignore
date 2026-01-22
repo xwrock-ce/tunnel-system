@@ -1,0 +1,73 @@
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+*.manifest
+*.spec
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+
+# ============ Node.js ============
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 构建输出
+frontend/dist/
+
+# ============ 环境与配置 ============
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ============ 数据库 ============
+*.db
+*.sqlite
+*.sqlite3
+
+# ============ 上传和运行时文件 ============
+uploads/
+static/
+
+# ============ 模型权重（大文件）============
+model_weights/
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# ============ IDE ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============ 系统文件 ============
+.DS_Store
+Thumbs.db
+
+# ============ 测试相关 ============
+test-results/
+playwright-report/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ============ 日志 ============
+*.log
+logs/
