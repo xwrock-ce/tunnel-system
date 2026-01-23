@@ -301,9 +301,9 @@ const RealTimeData: React.FC = () => {
   return (
     <div>
       {/* Page Header */}
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={4} className="page-title" style={{ margin: 0 }}>实时数据</Title>
-        <Space>
+      <div className="page-header">
+        <Title level={4} className="page-title">实时数据</Title>
+        <Space className="page-actions">
           <span style={{ color: '#94a3b8', fontSize: 12 }}>
             最后刷新: {lastRefreshTime ? dayjs(lastRefreshTime).format('HH:mm:ss') : '-'}
           </span>

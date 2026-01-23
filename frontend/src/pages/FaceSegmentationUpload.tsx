@@ -193,6 +193,7 @@ const FaceSegmentationUpload: React.FC = () => {
                   </Space>
                 }
                 variant="borderless"
+                className="card-surface"
               >
                 {currentAnalysis.status === 'completed' && currentAnalysis.excavation ? (
                   <>
@@ -269,7 +270,7 @@ const FaceSegmentationUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择隧道掌子面图片" variant="borderless">
+                  <Card title="选择隧道掌子面图片" variant="borderless" className="card-surface">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzingForPage}
@@ -313,6 +314,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     title="分析参数"
                     variant="borderless"
                     extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
+                    className="card-surface"
                   >
                     <Form
                       form={form}
@@ -351,7 +353,7 @@ const FaceSegmentationUpload: React.FC = () => {
             key: 'batch',
             label: '批量分析',
             children: batchTaskIds ? (
-              <Card variant="borderless">
+              <Card variant="borderless" className="card-surface">
                 <Result
                   status="success"
                   title="批量任务已启动"
@@ -369,7 +371,7 @@ const FaceSegmentationUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" variant="borderless">
+                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -433,6 +435,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     title="分析参数"
                     variant="borderless"
                     extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
+                    className="card-surface"
                   >
                     <Form
                       form={form}

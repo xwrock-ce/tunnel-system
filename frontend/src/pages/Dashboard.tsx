@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Row, Col, Card, Spin, Table, Button, Empty } from 'antd'
 import {
   ArrowUpOutlined,
-  MoreOutlined,
+  HistoryOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -426,11 +426,13 @@ const Dashboard: React.FC = () => {
       </Row>
 
       {/* Table Section */}
-      <Card bordered={false} className="kpi-card" style={{ marginTop: 24 }} bodyStyle={{ padding: 0 }}>
+         <Card bordered={false} className="kpi-card" style={{ marginTop: 24 }} bodyStyle={{ padding: 0 }}>
          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>最新分析序列</h3>
             <div style={{ display: 'flex', gap: 8 }}>
-               <Button size="small" type="text" icon={<MoreOutlined />} />
+               <Button size="small" type="text" icon={<HistoryOutlined />} onClick={() => navigate('/history')}>
+                 查看全部
+               </Button>
             </div>
          </div>
          <Table<AnalysisListItem>
@@ -442,8 +444,9 @@ const Dashboard: React.FC = () => {
                 onClick: () => {
                   if (record.status === 'completed') navigate(`/report/${record.id}`)
                 },
-                style: { cursor: 'pointer' }
+                style: { cursor: record.status === 'completed' ? 'pointer' : 'default' }
             })}
+            rowClassName={(record) => (record.status === 'completed' ? 'table-row-clickable' : 'table-row-disabled')}
             columns={[
                {
                  title: '序列 ID',
@@ -508,7 +511,18 @@ const Dashboard: React.FC = () => {
                  key: 'op',
                  align: 'right',
                  render: (_, record) => (
-                    <Button type="link" size="small" style={{ fontSize: 12, padding: 0 }} disabled={record.status !== 'completed'}>
+                    <Button
+                      type="link"
+                      size="small"
+                      style={{ fontSize: 12, padding: 0 }}
+                      disabled={record.status !== 'completed'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (record.status === 'completed') {
+                          navigate(`/report/${record.id}`)
+                        }
+                      }}
+                    >
                        查看详情
                     </Button>
                  )

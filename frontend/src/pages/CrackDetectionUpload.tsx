@@ -189,6 +189,7 @@ const CrackDetectionUpload: React.FC = () => {
                   </Space>
                 }
                 variant="borderless"
+                className="card-surface"
               >
                 {currentAnalysis.status === 'completed' ? (
                   <>
@@ -272,7 +273,7 @@ const CrackDetectionUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择混凝土表面图片" variant="borderless">
+                  <Card title="选择混凝土表面图片" variant="borderless" className="card-surface">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzing}
@@ -315,6 +316,7 @@ const CrackDetectionUpload: React.FC = () => {
                   <Card
                     title="检测设置"
                     variant="borderless"
+                    className="card-surface"
                   >
                     <Form
                       form={form}
@@ -352,7 +354,7 @@ const CrackDetectionUpload: React.FC = () => {
             key: 'batch',
             label: '批量检测',
             children: batchTaskIds ? (
-              <Card variant="borderless">
+              <Card variant="borderless" className="card-surface">
                 <Result
                   status="success"
                   title="批量任务已启动"
@@ -370,7 +372,7 @@ const CrackDetectionUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" variant="borderless">
+                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -433,6 +435,7 @@ const CrackDetectionUpload: React.FC = () => {
                   <Card
                     title="检测设置"
                     variant="borderless"
+                    className="card-surface"
                   >
                     <Form
                       form={form}

@@ -195,7 +195,7 @@ const History: React.FC = () => {
         <Title level={4} className="page-title">
           历史记录
         </Title>
-        <Space wrap>
+        <Space wrap className="page-actions">
           <Input.Search
             placeholder="输入 ID 搜索"
             allowClear
@@ -231,13 +231,14 @@ const History: React.FC = () => {
         </Space>
       </div>
 
-      <Card bordered={false}>
+      <Card bordered={false} className="card-surface">
         <Table
           columns={columns}
           dataSource={analyses}
           rowKey="id"
           loading={isLoadingList}
           size="middle"
+          rowClassName={() => 'table-row-clickable'}
           onRow={(record) => ({
             onClick: () => {
               navigate(`/report/${record.id}`)

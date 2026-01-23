@@ -1,7 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Typography } from 'antd';
-
-const { Text } = Typography;
 
 interface ImageComparisonProps {
   leftImage: string;
@@ -179,10 +176,13 @@ const ImageComparisonV2: React.FC<ImageComparisonProps> = ({
 }) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleStart = () => setIsResizing(true);
-  const handleEnd = () => setIsResizing(false);
+  const handleStart = () => {
+    setIsResizing(true);
+    setHasInteracted(true);
+  };
 
   const handleMove = (clientX: number) => {
     if (!containerRef.current) return;
@@ -231,6 +231,9 @@ const ImageComparisonV2: React.FC<ImageComparisonProps> = ({
       onMouseDown={(e) => { handleStart(); handleMove(e.clientX); }}
       onTouchStart={(e) => { handleStart(); handleMove(e.touches[0].clientX); }}
     >
+      {!hasInteracted && (
+        <div className="image-compare-hint">拖动分隔线对比</div>
+      )}
       {/* Right Image (Background) */}
       <img
         src={rightImage}

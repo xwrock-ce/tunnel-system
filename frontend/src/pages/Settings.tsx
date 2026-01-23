@@ -37,7 +37,7 @@ const Settings: React.FC = () => {
         </Title>
       </div>
 
-      <Card title="系统信息" bordered={false} style={{ marginBottom: 24 }}>
+      <Card title="系统信息" bordered={false} style={{ marginBottom: 24 }} className="card-surface">
         <Descriptions bordered column={1}>
           <Descriptions.Item label="系统版本">
             <Tag color="blue">v1.1.0</Tag>
@@ -58,6 +58,7 @@ const Settings: React.FC = () => {
         title="分析默认参数"
         bordered={false}
         style={{ marginBottom: 24 }}
+        className="card-surface"
         extra={
           <Space>
             <Button onClick={handleReset}>恢复默认</Button>
@@ -96,7 +97,7 @@ const Settings: React.FC = () => {
 
       <Divider />
 
-      <Card title="使用说明" bordered={false}>
+      <Card title="使用说明" bordered={false} className="card-surface">
         <Paragraph>
           <Text strong>1. 上传分析</Text>
           <br />

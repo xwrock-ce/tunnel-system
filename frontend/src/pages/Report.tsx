@@ -175,14 +175,14 @@ const Report: React.FC = () => {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 40 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ marginBottom: 24, background: '#fff', padding: '16px 24px', borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-header report-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/history')} type="text" />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Title level={4} style={{ margin: 0 }}>分析报告 #{analysis.id}</Title>
+              <Title level={4} className="page-title">分析报告 #{analysis.id}</Title>
               {excavation && getStatusTag(excavation.status)}
             </div>
              <Text type="secondary" style={{ fontSize: 12 }}>
@@ -190,7 +190,7 @@ const Report: React.FC = () => {
              </Text>
           </div>
         </div>
-        <Space>
+        <Space className="page-actions">
            <Button icon={<DownloadOutlined />} onClick={() => downloadFile(originalUrl, `report_${analysis.id}`)}>导出报告</Button>
         </Space>
       </div>
@@ -201,7 +201,7 @@ const Report: React.FC = () => {
           <Card 
             title="智能视觉分析" 
             bordered={false} 
-            className="shadow-card"
+            className="shadow-card card-surface"
             tabList={comparisonItems.map(i => ({ key: i.key, tab: i.label }))}
             activeTabKey={comparisonItems[0]?.key} // Controlled in real app
           >
@@ -213,7 +213,7 @@ const Report: React.FC = () => {
           </Card>
 
           {/* Geological Data (New Section based on research) */}
-          <Card title={<><ExperimentOutlined /> 地质特征参数 (Geological Parameters)</>} bordered={false} style={{ marginTop: 24 }}>
+          <Card title={<><ExperimentOutlined /> 地质特征参数 (Geological Parameters)</>} bordered={false} style={{ marginTop: 24 }} className="card-surface">
              <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }}>
                 <Descriptions.Item label="岩体质量等级 (RMR)">
                    <Tag color="blue">IV级 (差)</Tag> <Text type="secondary">(AI预估)</Text>
@@ -243,7 +243,7 @@ const Report: React.FC = () => {
         {/* Sidebar Stats */}
         <Col xs={24} xl={8}>
           {excavation && (
-            <Card title="超欠挖量化指标" bordered={false} style={{ marginBottom: 24 }}>
+            <Card title="超欠挖量化指标" bordered={false} style={{ marginBottom: 24 }} className="card-surface">
                <div style={{ textAlign: 'center', marginBottom: 24 }}>
                   <Statistic 
                      title="开挖面积偏差"
@@ -276,7 +276,7 @@ const Report: React.FC = () => {
           )}
 
           {analysis.metrics?.crack_count !== undefined && (
-             <Card title="裂缝病害统计" bordered={false}>
+             <Card title="裂缝病害统计" bordered={false} className="card-surface">
                 <Row gutter={16} style={{ textAlign: 'center' }}>
                    <Col span={12}>
                       <Statistic title="识别数量" value={analysis.metrics.crack_count} suffix="条" />
@@ -293,7 +293,7 @@ const Report: React.FC = () => {
              </Card>
           )}
 
-           <Card size="small" title="分析元数据" bordered={false} style={{ marginTop: 24 }}>
+           <Card size="small" title="分析元数据" bordered={false} style={{ marginTop: 24 }} className="card-surface">
               <Descriptions column={1} size="small">
                  <Descriptions.Item label="任务ID">#{analysis.id}</Descriptions.Item>
                  <Descriptions.Item label="处理时间">{dayjs(analysis.completed_at).diff(dayjs(analysis.created_at), 'second')} 秒</Descriptions.Item>

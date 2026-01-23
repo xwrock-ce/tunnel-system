@@ -83,16 +83,6 @@ const DropZone: React.FC<DropZoneProps> = ({
     }
   }, [disabled, validateFiles, onFilesSelected])
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const validFiles = validateFiles(files)
-    if (validFiles.length > 0) {
-      onFilesSelected(validFiles)
-    }
-    // Reset input to allow selecting the same file again
-    e.target.value = ''
-  }, [validateFiles, onFilesSelected])
-
   const handleClick = useCallback(() => {
     // Guard against double-clicks (React StrictMode can trigger twice)
     if (!disabled && !isClickPending.current) {
@@ -104,6 +94,24 @@ const DropZone: React.FC<DropZoneProps> = ({
       }, 100)
     }
   }, [disabled])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validFiles = validateFiles(files)
+    if (validFiles.length > 0) {
+      onFilesSelected(validFiles)
+    }
+    // Reset input to allow selecting the same file again
+    e.target.value = ''
+  }, [validateFiles, onFilesSelected])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (disabled) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleClick()
+    }
+  }, [disabled, handleClick])
 
   return (
     <>
@@ -129,17 +137,24 @@ const DropZone: React.FC<DropZoneProps> = ({
 
       {/* Drop zone area */}
       <div
+        className="dropzone"
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        title={disabled ? '上传中，暂不可用' : '点击或拖拽图片上传'}
         style={{
           padding: '32px 24px',
           background: isDragging ? 'rgba(79, 70, 229, 0.06)' : 'rgba(255, 255, 255, 0.55)',
           border: `1px dashed ${isDragging ? 'rgba(79, 70, 229, 0.6)' : 'rgba(15, 23, 42, 0.18)'}`,
           borderRadius: 14,
           textAlign: 'center',
-          cursor: disabled ? 'not-allowed' : 'default',
+          cursor: disabled ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s ease',
           opacity: disabled ? 0.5 : 1,
         }}
