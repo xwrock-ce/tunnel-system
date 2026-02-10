@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Card, Table, Tag, Button, Space, Modal, Select, Typography, message, Input
+  Card, Table, Tag, Button, Space, Modal, Select, Typography, message, Input, Empty,
 } from 'antd'
 import { EyeOutlined, DeleteOutlined, ReloadOutlined, DownloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
@@ -16,7 +16,8 @@ const History: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [statusFilter, setStatusFilter] = useState<string | undefined>()
-  const [searchText, setSearchText] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<string>('')
+  const [searchKeyword, setSearchKeyword] = useState<string>('')
 
   const {
     analyses,
@@ -27,18 +28,37 @@ const History: React.FC = () => {
     deleteAnalysis,
   } = useAnalysisStore()
 
-  // Initialize search from navigation state
   useEffect(() => {
     if (location.state?.search) {
-      setSearchText(location.state.search)
-      // Clear state so it doesn't persist on refresh/re-nav unnecessarily
+      const initialSearch = String(location.state.search).trim()
+      setSearchInput(initialSearch)
+      setSearchKeyword(initialSearch)
       window.history.replaceState({}, document.title)
     }
   }, [location.state])
 
   useEffect(() => {
-    fetchAnalyses(1, statusFilter, searchText)
-  }, [fetchAnalyses, statusFilter, searchText])
+    const timeoutId = window.setTimeout(() => {
+      const normalized = searchInput.trim()
+      setSearchKeyword((prev) => (prev === normalized ? prev : normalized))
+    }, 300)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchInput])
+
+  useEffect(() => {
+    fetchAnalyses(1, statusFilter, searchKeyword)
+  }, [fetchAnalyses, statusFilter, searchKeyword])
+
+  const handleSearchSubmit = (value: string) => {
+    const normalized = value.trim()
+    setSearchInput(normalized)
+    setSearchKeyword(normalized)
+  }
+
+  const canOpenReport = (record: AnalysisListItem) => record.status === 'completed'
 
   const handleDelete = (id: number) => {
     Modal.confirm({
@@ -86,25 +106,25 @@ const History: React.FC = () => {
     }
   }
 
-  const escapeCsv = (val: string) => {
-    if (val.includes('"') || val.includes(',') || val.includes('\n')) {
-      return `"${val.replace(/"/g, '""')}"`
+  const escapeCsv = (value: string) => {
+    if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+      return `"${value.replace(/"/g, '""')}"`
     }
-    return val
+    return value
   }
 
   const exportCurrentPage = () => {
     const headers = ['ID', '分析状态', '超欠挖状态', '实际面积(m²)', '偏差(%)', '创建时间']
-    const rows = analyses.map((a) => [
-      String(a.id),
-      a.status,
-      a.excavation_status || '-',
-      a.actual_area_m2 === undefined || a.actual_area_m2 === null ? '-' : a.actual_area_m2.toFixed(2),
-      a.difference_percent === undefined || a.difference_percent === null ? '-' : a.difference_percent.toFixed(2),
-      dayjs(a.created_at).format('YYYY-MM-DD HH:mm:ss'),
+    const rows = analyses.map((analysis) => [
+      String(analysis.id),
+      analysis.status,
+      analysis.excavation_status || '-',
+      analysis.actual_area_m2 === undefined || analysis.actual_area_m2 === null ? '-' : analysis.actual_area_m2.toFixed(2),
+      analysis.difference_percent === undefined || analysis.difference_percent === null ? '-' : analysis.difference_percent.toFixed(2),
+      dayjs(analysis.created_at).format('YYYY-MM-DD HH:mm:ss'),
     ])
-    const csv = [headers, ...rows].map((r) => r.map(escapeCsv).join(',')).join('\n')
 
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\n')
     const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -122,6 +142,7 @@ const History: React.FC = () => {
       title: 'ID',
       dataIndex: 'id',
       width: 80,
+      render: (id) => <span className="history-id-text">#{id}</span>,
     },
     {
       title: '分析状态',
@@ -139,36 +160,44 @@ const History: React.FC = () => {
       title: '实际面积',
       dataIndex: 'actual_area_m2',
       width: 120,
-      render: (val) => (val === null || val === undefined ? '-' : `${val.toFixed(2)} m²`),
+      render: (value) => (value === null || value === undefined ? '-' : `${value.toFixed(2)} m²`),
     },
     {
       title: '偏差',
       dataIndex: 'difference_percent',
       width: 100,
-      render: (val) => {
-        if (val === null || val === undefined) return '-'
-        const color = Math.abs(val) > 2 ? (val > 0 ? 'red' : 'orange') : 'green'
-        return <span style={{ color }}>{val > 0 ? '+' : ''}{val.toFixed(2)}%</span>
+      render: (value) => {
+        if (value === null || value === undefined) return <span className="history-diff-text is-empty">-</span>
+
+        const cls = Math.abs(value) > 2 ? (value > 0 ? 'is-over' : 'is-under') : 'is-normal'
+        return (
+          <span className={`history-diff-text ${cls}`}>
+            {value > 0 ? '+' : ''}{value.toFixed(2)}%
+          </span>
+        )
       },
     },
     {
       title: '创建时间',
       dataIndex: 'created_at',
       width: 180,
-      render: (date) => dayjs(date).format('YYYY-MM-DD HH:mm:ss'),
+      render: (date) => <span className="history-time-text">{dayjs(date).format('YYYY-MM-DD HH:mm:ss')}</span>,
     },
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 170,
       render: (_, record) => (
-        <Space>
+        <Space className="history-table-actions">
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={(e) => {
-              e.stopPropagation()
-              navigate(`/report/${record.id}`)
+            disabled={!canOpenReport(record)}
+            onClick={(event) => {
+              event.stopPropagation()
+              if (canOpenReport(record)) {
+                navigate(`/report/${record.id}`)
+              }
             }}
           >
             查看
@@ -177,8 +206,8 @@ const History: React.FC = () => {
             type="link"
             danger
             icon={<DeleteOutlined />}
-            onClick={(e) => {
-              e.stopPropagation()
+            onClick={(event) => {
+              event.stopPropagation()
               handleDelete(record.id)
             }}
           >
@@ -189,6 +218,15 @@ const History: React.FC = () => {
     },
   ]
 
+  const statusFilterLabel =
+    statusFilter === 'over_excavation'
+      ? '超挖'
+      : statusFilter === 'under_excavation'
+        ? '欠挖'
+        : statusFilter === 'within_tolerance'
+          ? '合格'
+          : '全部状态'
+
   return (
     <div>
       <div className="page-header">
@@ -196,28 +234,31 @@ const History: React.FC = () => {
           历史记录
         </Title>
         <Space wrap className="page-actions">
+          <span className="history-summary">筛选：{statusFilterLabel} · 共 {totalCount} 条</span>
+          {searchKeyword && <span className="history-summary">关键词：{searchKeyword}</span>}
           <Input.Search
-            placeholder="输入 ID 搜索"
+            placeholder="输入 ID 或关键词"
             allowClear
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onSearch={(val) => setSearchText(val)}
-            style={{ width: 200 }}
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            onSearch={handleSearchSubmit}
+            className="history-search-input"
           />
           <Select
             placeholder="筛选状态"
             allowClear
-            style={{ width: 150 }}
             value={statusFilter}
             onChange={setStatusFilter}
+            className="history-filter-select"
           >
             <Option value="over_excavation">超挖</Option>
             <Option value="under_excavation">欠挖</Option>
             <Option value="within_tolerance">合格</Option>
           </Select>
           <Button
-            icon={<ReloadOutlined />}
-            onClick={() => fetchAnalyses(currentPage, statusFilter, searchText)}
+            icon={<ReloadOutlined spin={isLoadingList} />}
+            onClick={() => fetchAnalyses(currentPage, statusFilter, searchKeyword)}
+            loading={isLoadingList}
           >
             刷新
           </Button>
@@ -231,26 +272,33 @@ const History: React.FC = () => {
         </Space>
       </div>
 
-      <Card bordered={false} className="card-surface">
+      <Card bordered={false} className="card-surface data-table-card">
         <Table
           columns={columns}
           dataSource={analyses}
           rowKey="id"
           loading={isLoadingList}
           size="middle"
-          rowClassName={() => 'table-row-clickable'}
+          scroll={{ x: 980 }}
+          locale={{
+            emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无历史记录" />,
+          }}
+          rowClassName={(record) => (canOpenReport(record) ? 'table-row-clickable' : 'table-row-disabled')}
           onRow={(record) => ({
             onClick: () => {
-              navigate(`/report/${record.id}`)
+              if (canOpenReport(record)) {
+                navigate(`/report/${record.id}`)
+              }
             },
+            style: { cursor: canOpenReport(record) ? 'pointer' : 'default' },
           })}
           pagination={{
             total: totalCount,
             current: currentPage,
             pageSize: 20,
             showSizeChanger: false,
-            showTotal: (total) => `共 ${total} 条记录`,
-            onChange: (page) => fetchAnalyses(page, statusFilter, searchText),
+            showTotal: (totalItems) => `共 ${totalItems} 条记录`,
+            onChange: (page) => fetchAnalyses(page, statusFilter, searchKeyword),
           }}
         />
       </Card>

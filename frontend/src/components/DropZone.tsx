@@ -26,6 +26,8 @@ const DropZone: React.FC<DropZoneProps> = ({
   const dragCounter = useRef(0)
   const isClickPending = useRef(false)
 
+  const modeLabel = multiple ? `最多 ${maxFiles} 张` : '单张上传'
+
   const validateFiles = useCallback((files: File[]): File[] => {
     const validFiles: File[] = []
     const maxBytes = maxSizeMB * 1024 * 1024
@@ -137,7 +139,7 @@ const DropZone: React.FC<DropZoneProps> = ({
 
       {/* Drop zone area */}
       <div
-        className="dropzone"
+        className={`dropzone ${isDragging ? 'dropzone--dragging' : ''}`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -159,6 +161,7 @@ const DropZone: React.FC<DropZoneProps> = ({
           opacity: disabled ? 0.5 : 1,
         }}
       >
+        <span className="dropzone-mode-tag">{modeLabel}</span>
         {children || (
           <>
             <p style={{ marginBottom: 8 }}>

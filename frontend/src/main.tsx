@@ -4,6 +4,7 @@ import { ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import App from './App'
 import './styles/global.css'
+import './styles/nature-theme.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -11,43 +12,43 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       locale={zhCN}
       theme={{
         token: {
-          colorPrimary: '#2563eb', // Blue 600 - More vivid industrial blue
+          colorPrimary: '#245c91',
           borderRadius: 12,
           fontFamily:
             "'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-          colorBgLayout: '#f8fafc', // Slate 50
-          colorTextHeading: '#0f172a', // Slate 900
-          colorText: '#334155', // Slate 700
-          colorTextSecondary: '#64748b', // Slate 500
+          colorBgLayout: '#f5f6f8',
+          colorTextHeading: '#1f2a37',
+          colorText: '#3b4754',
+          colorTextSecondary: '#6b7581',
           controlHeight: 40,
         },
         components: {
           Card: {
-            boxShadowTertiary: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)', // Tailwind shadow-sm
+            boxShadowTertiary: '0 14px 30px -24px rgba(17, 24, 39, 0.26)',
             colorBgContainer: '#ffffff',
             headerFontSize: 16,
           },
           Layout: {
-            siderBg: '#0f172a', // Slate 900
-            headerBg: '#ffffff',
-            bodyBg: '#f8fafc',
+            siderBg: '#141b24',
+            headerBg: 'rgba(255, 255, 255, 0.92)',
+            bodyBg: '#f5f6f8',
           },
           Menu: {
             darkItemBg: 'transparent',
-            darkItemColor: '#94a3b8', // Slate 400
-            darkItemHoverBg: '#1e293b', // Slate 800
+            darkItemColor: '#a5b0bc',
+            darkItemHoverBg: 'rgba(255, 255, 255, 0.08)',
             darkItemHoverColor: '#ffffff',
-            darkItemSelectedBg: 'rgba(37, 99, 235, 0.1)', // Blue 600 with opacity
-            darkItemSelectedColor: '#60a5fa', // Blue 400
-            itemBorderRadius: 8,
-            itemMarginInline: 12,
+            darkItemSelectedBg: 'rgba(36, 92, 145, 0.25)',
+            darkItemSelectedColor: '#dbeafe',
+            itemBorderRadius: 10,
+            itemMarginInline: 10,
           },
           Button: {
-            fontWeight: 500,
+            fontWeight: 600,
           },
           Table: {
-            headerBg: '#f8fafc', // Slate 50
-            headerColor: '#64748b', // Slate 500
+            headerBg: '#f7f8fa',
+            headerColor: '#5f6874',
             headerSplitColor: 'transparent',
           }
         },

@@ -41,6 +41,8 @@ const FaceSegmentationUpload: React.FC = () => {
   } = useAnalysisStore()
 
   const isAnalyzingForPage = isAnalyzing && currentAnalysisType === 'face_segmentation'
+  const selectedCount = mode === 'single' ? (singleFile ? 1 : 0) : batchFiles.length
+  const modeText = mode === 'single' ? '单张模式' : '批量模式'
 
   useEffect(() => {
     if (isAnalyzingForPage) return
@@ -162,10 +164,19 @@ const FaceSegmentationUpload: React.FC = () => {
         style={{ marginBottom: 16 }}
       />
 
+      <div className="upload-status-strip">
+        <span className="upload-status-item">{modeText}</span>
+        <span className="upload-status-item">已选文件：{selectedCount}</span>
+        <span className={`upload-status-item ${isAnalyzingForPage ? 'is-active' : ''}`}>
+          {isAnalyzingForPage ? '分析进行中' : '待开始'}
+        </span>
+      </div>
+
       <Tabs
         activeKey={mode}
         onChange={(key) => setMode(key as UploadMode)}
         destroyInactiveTabPane
+        className="upload-tabs"
         items={[
           {
             key: 'single',
@@ -270,7 +281,7 @@ const FaceSegmentationUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择隧道掌子面图片" variant="borderless" className="card-surface">
+                  <Card title="选择隧道掌子面图片" variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzingForPage}
@@ -278,10 +289,10 @@ const FaceSegmentationUpload: React.FC = () => {
                     />
 
                     {singleFile && (
-                      <div style={{ marginTop: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <div className="upload-preview-panel">
+                        <div className="upload-file-item">
                           <PaperClipOutlined />
-                          <Text>{singleFile.name}</Text>
+                          <Text ellipsis className="upload-file-name">{singleFile.name}</Text>
                           <Button
                             type="text"
                             size="small"
@@ -301,7 +312,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     )}
 
                     {isAnalyzingForPage && (
-                      <div style={{ marginTop: 20 }}>
+                      <div className="upload-progress-panel">
                         <Progress percent={progress} status="active" strokeColor="#4f46e5" />
                         <Text type="secondary">{progressMessage}</Text>
                       </div>
@@ -314,7 +325,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     title="分析参数"
                     variant="borderless"
                     extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
-                    className="card-surface"
+                    className="card-surface upload-config-card"
                   >
                     <Form
                       form={form}
@@ -337,6 +348,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           type="primary"
                           onClick={handleSingleUpload}
                           loading={isAnalyzingForPage}
+                          disabled={!singleFile || isAnalyzingForPage}
                           block
                           size="large"
                         >
@@ -371,7 +383,7 @@ const FaceSegmentationUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface">
+                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -381,7 +393,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     />
 
                     {batchFiles.length > 0 && (
-                      <div style={{ marginTop: 16 }}>
+                      <div className="upload-preview-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                           <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
                           <Button
@@ -394,20 +406,14 @@ const FaceSegmentationUpload: React.FC = () => {
                             清空
                           </Button>
                         </div>
-                        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                        <div className="upload-file-list">
                           {batchFiles.map((f, i) => (
                             <div
-                              key={i}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                padding: '4px 0',
-                                borderBottom: '1px solid rgba(0,0,0,0.06)'
-                              }}
+                              key={`${f.name}-${i}`}
+                              className="upload-file-row"
                             >
                               <PaperClipOutlined />
-                              <Text ellipsis style={{ flex: 1 }}>{f.name}</Text>
+                              <Text ellipsis style={{ flex: 1 }} className="upload-file-name">{f.name}</Text>
                               <Button
                                 type="text"
                                 size="small"
@@ -423,7 +429,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     )}
 
                     {isAnalyzingForPage && (
-                      <div style={{ marginTop: 20 }}>
+                      <div className="upload-progress-panel">
                         <Progress percent={progress} status="active" strokeColor="#4f46e5" />
                         <Text type="secondary">{progressMessage}</Text>
                       </div>
@@ -435,7 +441,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     title="分析参数"
                     variant="borderless"
                     extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
-                    className="card-surface"
+                    className="card-surface upload-config-card"
                   >
                     <Form
                       form={form}
@@ -458,6 +464,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           type="primary"
                           onClick={handleBatchUpload}
                           loading={isAnalyzingForPage}
+                          disabled={batchFiles.length === 0 || isAnalyzingForPage}
                           block
                           size="large"
                         >

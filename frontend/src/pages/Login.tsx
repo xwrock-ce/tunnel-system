@@ -1,8 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Form, Input, Button, Checkbox, message, Typography, theme, ConfigProvider } from 'antd'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import {
+  UserOutlined,
+  LockOutlined,
+  ArrowRightOutlined,
+  AimOutlined,
+  ThunderboltOutlined,
+  SafetyCertificateOutlined,
+} from '@ant-design/icons'
+import TunnelIcon from '@/components/icons/TunnelIcon'
 
 const { Title, Text } = Typography
 
@@ -48,11 +56,7 @@ const Login: React.FC = () => {
         {/* Brand Area (Top Left) */}
         <div className="login-brand">
           <div className="logo-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-              <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
+            <TunnelIcon size={22} className="brand-mark-icon" />
           </div>
           <span className="brand-text">Tunnel AI</span>
         </div>
@@ -72,9 +76,18 @@ const Login: React.FC = () => {
              </p>
              
              <div className="feature-tags">
-                <div className="feature-tag">🎯 高质量识别</div>
-                <div className="feature-tag">⚡ 实时分析</div>
-                <div className="feature-tag">🛡️ 工业级安全</div>
+                <div className="feature-tag">
+                  <AimOutlined className="feature-tag-icon" />
+                  <span>高质量识别</span>
+                </div>
+                <div className="feature-tag">
+                  <ThunderboltOutlined className="feature-tag-icon" />
+                  <span>实时分析</span>
+                </div>
+                <div className="feature-tag">
+                  <SafetyCertificateOutlined className="feature-tag-icon" />
+                  <span>工业级安全</span>
+                </div>
              </div>
           </div>
 

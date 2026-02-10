@@ -15,6 +15,7 @@ import {
   MenuFoldOutlined,
   PictureOutlined,
   ThunderboltOutlined,
+  LineChartOutlined,
   DownOutlined,
   BellOutlined,
   QuestionCircleOutlined,
@@ -24,7 +25,7 @@ import {
 } from '@ant-design/icons'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useProjectStore } from '@/stores/useProjectStore'
-import '@/styles/layout.css'
+import TunnelIcon from '@/components/icons/TunnelIcon'
 
 const { Header, Sider, Content } = Layout
 const { TabPane } = Tabs
@@ -36,7 +37,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { currentProject } = useProjectStore()
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
+  const { token: { borderRadiusLG } } = theme.useToken();
 
   const handleSearch = (value: string) => {
     if (!value.trim()) return
@@ -56,20 +57,23 @@ const MainLayout: React.FC = () => {
     { id: 3, title: '系统维护', desc: '预计今晚 02:00 进行例行维护。', type: 'info', time: '2小时前' },
   ]
 
+  const notificationErrorCount = notifications.filter((n) => n.type === 'error').length
+  const sectionShortName = currentProject.section.split(' ')[0]
+
   const notificationContent = (
     <List
+      className="notification-list"
       itemLayout="horizontal"
       dataSource={notifications}
-      style={{ width: 300 }}
       renderItem={(item) => (
         <List.Item>
           <List.Item.Meta
             avatar={
-              item.type === 'error' ? <ThunderboltOutlined style={{ color: 'red' }} /> :
-              item.type === 'success' ? <ProjectOutlined style={{ color: 'green' }} /> :
-              <InfoCircleOutlined style={{ color: 'blue' }} />
+              item.type === 'error' ? <ThunderboltOutlined className="notification-icon notification-icon--error" /> :
+              item.type === 'success' ? <ProjectOutlined className="notification-icon notification-icon--success" /> :
+              <InfoCircleOutlined className="notification-icon notification-icon--info" />
             }
-            title={<span>{item.title} <span style={{ fontSize: 10, color: '#999', float: 'right' }}>{item.time}</span></span>}
+            title={<span>{item.title} <span className="notification-time">{item.time}</span></span>}
             description={item.desc}
           />
         </List.Item>
@@ -78,7 +82,7 @@ const MainLayout: React.FC = () => {
   )
 
   const projectContent = (
-    <Descriptions column={1} size="small" style={{ width: 300 }} bordered>
+    <Descriptions className="project-detail-descriptions" column={1} size="small" bordered>
       <Descriptions.Item label="工程名称">{currentProject.name}</Descriptions.Item>
       <Descriptions.Item label="当前标段">{currentProject.section}</Descriptions.Item>
       <Descriptions.Item label="施工单位">{currentProject.contractor}</Descriptions.Item>
@@ -118,7 +122,7 @@ const MainLayout: React.FC = () => {
         },
         {
           key: '/realtime',
-          icon: <span role="img" aria-label="realtime" className="anticon"><svg width="1em" height="1em" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></span>,
+          icon: <LineChartOutlined />,
           label: '实时监控',
         }
       ]
@@ -203,11 +207,7 @@ const MainLayout: React.FC = () => {
       >
         <div className="sidebar-logo-container">
           <div className="logo-box">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-              <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
+            <TunnelIcon size={20} className="brand-mark-icon" />
           </div>
           {!collapsed && (
             <div className="logo-text">
@@ -233,65 +233,43 @@ const MainLayout: React.FC = () => {
         <div className="sidebar-user-section">
            <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="topRight" trigger={['click']}>
               <div className={`user-card ${collapsed ? 'collapsed' : ''}`}>
-                 <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#3b82f6' }} />
+                 <Avatar size="small" icon={<UserOutlined />} className="sidebar-user-avatar" />
                  {!collapsed && (
                    <div className="user-info">
                       <span className="username">{user?.username || 'Admin User'}</span>
                       <span className="role">系统管理员</span>
                    </div>
                  )}
-                 {!collapsed && <DownOutlined style={{ fontSize: 10, color: '#64748b' }} />}
+                 {!collapsed && <DownOutlined className="sidebar-user-caret" />}
               </div>
            </Dropdown>
         </div>
       </Sider>
       
       <Layout>
-        <Header className="app-header" style={{ background: colorBgContainer }}>
+        <Header className="app-header">
           <div className="header-left">
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{
-                fontSize: '16px',
-                width: 48,
-                height: 48,
-                marginRight: 16
-              }}
+              className="sidebar-toggle-btn"
             />
             <Breadcrumb items={getBreadcrumbs()} />
           </div>
 
           <div className="header-right">
-             {/* Project Selector */}
              <Popover content={projectContent} title="项目详情" trigger="hover" placement="bottomRight">
-               <div 
-                  className="project-selector-btn"  /* 样式引用 */
-                  style={{ 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    gap: 8, 
-                    padding: '6px 16px', 
-                    borderRadius: 6, 
-                    transition: 'all 0.3s',
-                    background: '#f1f5f9',
-                    minWidth: 200, // Fixed width for stability
-                    border: '1px solid transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}
-               >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ProjectOutlined style={{ color: '#1677ff' }} />
-                    <span style={{ fontWeight: 500, color: '#1e293b' }}>
-                      {currentProject.name} <span style={{ color: '#64748b', fontSize: 12 }}>| {currentProject.section.split(' ')[0]}</span>
+               <button type="button" className="project-selector-btn" aria-label="查看当前项目详情">
+                  <span className="project-selector-main">
+                    <ProjectOutlined className="project-selector-icon" />
+                    <span className="project-selector-text">
+                      {currentProject.name}
+                      <span className="project-selector-section">| {sectionShortName}</span>
                     </span>
-                  </div>
-                  <DownOutlined style={{ fontSize: 10, color: '#94a3b8' }} />
-               </div>
+                  </span>
+                  <DownOutlined className="project-selector-caret" />
+               </button>
              </Popover>
 
              <div className="header-divider"></div>
@@ -302,10 +280,9 @@ const MainLayout: React.FC = () => {
                      placeholder="全局搜索分析记录..." 
                      allowClear
                      onSearch={handleSearch}
-                     style={{ width: 280 }} // Increased width
                      bordered={false}
-                     className="header-search-input"
-                     enterButton={false} // Clean look
+                     className="header-search-input header-search-input--wide"
+                     enterButton={false}
                   />
                 </Tooltip>
                 
@@ -319,7 +296,7 @@ const MainLayout: React.FC = () => {
                 </Tooltip>
                 
                 <Popover content={notificationContent} title="系统通知" trigger="click" placement="bottomRight">
-                  <Badge count={notifications.filter(n => n.type === 'error').length} dot offset={[-4, 4]}>
+                  <Badge count={notificationErrorCount} dot offset={[-4, 4]}>
                     <Button type="text" icon={<BellOutlined />} className="action-btn" />
                   </Badge>
                 </Popover>
@@ -327,14 +304,12 @@ const MainLayout: React.FC = () => {
           </div>
         </Header>
         
-        <Content style={{ 
-           margin: '24px 24px 0', 
-           padding: 24, 
-           minHeight: 280, 
-           background: colorBgContainer, 
-           borderRadius: borderRadiusLG,
-           overflowY: 'auto'
-        }}>
+        <Content
+          className="app-content"
+          style={{
+            borderRadius: borderRadiusLG,
+          }}
+        >
           <Outlet />
         </Content>
         

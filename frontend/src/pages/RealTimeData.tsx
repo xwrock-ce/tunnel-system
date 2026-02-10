@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Row, Col, Card, Table, Progress, Tag, Button, Space, Tooltip, Divider, Typography, Spin, Empty } from 'antd'
-import { ReloadOutlined, SyncOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { ReloadOutlined, SyncOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -13,7 +12,6 @@ dayjs.locale('zh-cn')
 
 const { Title } = Typography
 
-// Types
 interface ActiveAnalysis extends AnalysisListItem {
   progress: number
   progressMessage: string
@@ -25,22 +23,62 @@ interface ManagedConnection {
   keepAliveInterval: number | null
 }
 
+const analysisTypeLabelMap: Record<string, string> = {
+  face_segmentation: '掌子面分割',
+  crack_detection: '裂缝检测',
+  full: '完整分析',
+}
+
+const getAnalysisTypeLabel = (analysisType: string) => analysisTypeLabelMap[analysisType] || analysisType
+
+const getModelStatusText = (status: string) => {
+  if (status === 'online') return '运行中'
+  if (status === 'standby') return '待机'
+  return '离线'
+}
+
+const getModelStatusColor = (status: string) => {
+  if (status === 'online') return 'success'
+  if (status === 'standby') return 'warning'
+  return 'error'
+}
+
+const clampPercent = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 0
+  }
+  return Math.max(0, Math.min(100, value))
+}
+
+const formatUptime = (uptimeSeconds: number | null) => {
+  if (uptimeSeconds === null) {
+    return '-'
+  }
+  const hours = Math.floor(uptimeSeconds / 3600)
+  const minutes = Math.floor((uptimeSeconds % 3600) / 60)
+  return `${hours} 小时 ${minutes} 分钟`
+}
 
 const RealTimeData: React.FC = () => {
-  const navigate = useNavigate()
   const [activeAnalyses, setActiveAnalyses] = useState<ActiveAnalysis[]>([])
   const [isLoadingList, setIsLoadingList] = useState(false)
+  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null)
   const [isLoadingSystem, setIsLoadingSystem] = useState(false)
+  const [taskFetchError, setTaskFetchError] = useState<string | null>(null)
+  const [systemFetchError, setSystemFetchError] = useState<string | null>(null)
 
-  // WebSocket connections managed via ref to avoid re-renders
   const wsConnectionsRef = useRef<Map<number, ManagedConnection>>(new Map())
-  const [wsStatus, setWsStatus] = useState<Map<number, boolean>>(new Map())
 
-  // Cleanup all WebSocket connections
+  const updateAnalysisConnection = useCallback((analysisId: number, isConnected: boolean) => {
+    setActiveAnalyses((prev) => prev.map((analysis) => (
+      analysis.id === analysisId ? { ...analysis, wsConnected: isConnected } : analysis
+    )))
+  }, [])
+
   const cleanupAllConnections = useCallback(() => {
-    wsConnectionsRef.current.forEach((conn, id) => {
+    wsConnectionsRef.current.forEach((conn) => {
       if (conn.keepAliveInterval) {
         clearInterval(conn.keepAliveInterval)
       }
@@ -49,17 +87,28 @@ const RealTimeData: React.FC = () => {
       }
     })
     wsConnectionsRef.current.clear()
-    setWsStatus(new Map())
+    setActiveAnalyses((prev) => prev.map((analysis) => (
+      analysis.wsConnected ? { ...analysis, wsConnected: false } : analysis
+    )))
   }, [])
 
-  // Connect WebSocket for a specific analysis
+  const disconnectWebSocket = useCallback((analysisId: number) => {
+    const conn = wsConnectionsRef.current.get(analysisId)
+    if (conn) {
+      if (conn.keepAliveInterval) {
+        clearInterval(conn.keepAliveInterval)
+      }
+      conn.ws.close()
+      wsConnectionsRef.current.delete(analysisId)
+    }
+    updateAnalysisConnection(analysisId, false)
+  }, [updateAnalysisConnection])
+
   const connectWebSocket = useCallback((analysisId: number) => {
-    // Don't connect if already connected
     if (wsConnectionsRef.current.has(analysisId)) {
       return
     }
 
-    // Limit concurrent connections
     if (wsConnectionsRef.current.size >= 10) {
       return
     }
@@ -78,23 +127,31 @@ const RealTimeData: React.FC = () => {
     }, 25000)
 
     ws.onopen = () => {
-      setWsStatus(prev => new Map(prev).set(analysisId, true))
+      updateAnalysisConnection(analysisId, true)
     }
 
     ws.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data)
         if (payload?.type === 'progress') {
-          setActiveAnalyses(prev => prev.map(a =>
-            a.id === analysisId
-              ? { ...a, progress: payload.progress, progressMessage: payload.message, wsConnected: true }
-              : a
-          ))
+          const progress = clampPercent(payload.progress)
+          const message = typeof payload.message === 'string' && payload.message.trim()
+            ? payload.message
+            : '处理中...'
+          setActiveAnalyses((prev) => prev.map((analysis) => (
+            analysis.id === analysisId
+              ? {
+                ...analysis,
+                progress,
+                progressMessage: message,
+                wsConnected: true,
+              }
+              : analysis
+          )))
         }
         if (payload?.type === 'result' || payload?.type === 'error') {
-          // Task completed, remove from list and close connection
           disconnectWebSocket(analysisId)
-          setActiveAnalyses(prev => prev.filter(a => a.id !== analysisId))
+          setActiveAnalyses((prev) => prev.filter((analysis) => analysis.id !== analysisId))
         }
       } catch {
         // ignore parse errors
@@ -102,76 +159,64 @@ const RealTimeData: React.FC = () => {
     }
 
     ws.onerror = () => {
-      setWsStatus(prev => new Map(prev).set(analysisId, false))
+      updateAnalysisConnection(analysisId, false)
     }
 
     ws.onclose = () => {
-      setWsStatus(prev => {
-        const newMap = new Map(prev)
-        newMap.delete(analysisId)
-        return newMap
-      })
-      if (wsConnectionsRef.current.has(analysisId)) {
-        const conn = wsConnectionsRef.current.get(analysisId)!
-        if (conn.keepAliveInterval) {
-          clearInterval(conn.keepAliveInterval)
-        }
-        wsConnectionsRef.current.delete(analysisId)
+      const conn = wsConnectionsRef.current.get(analysisId)
+      if (conn?.keepAliveInterval) {
+        clearInterval(conn.keepAliveInterval)
       }
+      wsConnectionsRef.current.delete(analysisId)
+      updateAnalysisConnection(analysisId, false)
     }
 
     wsConnectionsRef.current.set(analysisId, { ws, keepAliveInterval })
-  }, [])
+  }, [disconnectWebSocket, updateAnalysisConnection])
 
-  // Disconnect WebSocket for a specific analysis
-  const disconnectWebSocket = useCallback((analysisId: number) => {
-    const conn = wsConnectionsRef.current.get(analysisId)
-    if (conn) {
-      if (conn.keepAliveInterval) {
-        clearInterval(conn.keepAliveInterval)
-      }
-      conn.ws.close()
-      wsConnectionsRef.current.delete(analysisId)
-    }
-  }, [])
-
-  // Fetch active analyses
   const fetchActiveTasks = useCallback(async () => {
     setIsLoadingList(true)
+    setTaskFetchError(null)
     try {
-      // Fetch both pending and processing in parallel
       const [pendingRes, processingRes] = await Promise.all([
         analysisApi.list(1, 50, 'pending'),
         analysisApi.list(1, 50, 'processing'),
       ])
 
-      const allActive: ActiveAnalysis[] = [
-        ...processingRes.data.items.map(item => ({
-          ...item,
-          progress: 0,
-          progressMessage: '处理中...',
-          wsConnected: wsStatus.get(item.id) || false,
-        })),
-        ...pendingRes.data.items.map(item => ({
-          ...item,
-          progress: 0,
-          progressMessage: '等待中...',
-          wsConnected: false,
-        })),
-      ]
+      setActiveAnalyses((prev) => {
+        const prevMap = new Map(prev.map((analysis) => [analysis.id, analysis]))
 
-      setActiveAnalyses(allActive)
+        const processingTasks: ActiveAnalysis[] = processingRes.data.items.map((item) => {
+          const previous = prevMap.get(item.id)
+          return {
+            ...item,
+            progress: previous?.progress ?? 0,
+            progressMessage: previous?.progressMessage || '处理中...',
+            wsConnected: previous?.wsConnected || wsConnectionsRef.current.has(item.id),
+          }
+        })
+
+        const pendingTasks: ActiveAnalysis[] = pendingRes.data.items.map((item) => {
+          const previous = prevMap.get(item.id)
+          return {
+            ...item,
+            progress: previous?.progress ?? 0,
+            progressMessage: previous?.progressMessage || '等待中...',
+            wsConnected: false,
+          }
+        })
+
+        return [...processingTasks, ...pendingTasks]
+      })
       setLastRefreshTime(new Date())
 
-      // Connect WebSocket for processing tasks
-      processingRes.data.items.forEach(item => {
+      processingRes.data.items.forEach((item) => {
         if (!wsConnectionsRef.current.has(item.id)) {
           connectWebSocket(item.id)
         }
       })
 
-      // Disconnect WebSocket for tasks no longer processing
-      const processingIds = new Set(processingRes.data.items.map(i => i.id))
+      const processingIds = new Set(processingRes.data.items.map((item) => item.id))
       wsConnectionsRef.current.forEach((_, id) => {
         if (!processingIds.has(id)) {
           disconnectWebSocket(id)
@@ -179,51 +224,75 @@ const RealTimeData: React.FC = () => {
       })
     } catch (error) {
       console.error('Failed to fetch active tasks:', error)
+      setTaskFetchError('获取任务列表失败，请检查后端连接')
     } finally {
       setIsLoadingList(false)
     }
-  }, [connectWebSocket, disconnectWebSocket, wsStatus])
+  }, [connectWebSocket, disconnectWebSocket])
 
-  // Fetch system status
   const fetchSystemStatus = useCallback(async () => {
     setIsLoadingSystem(true)
+    setSystemFetchError(null)
     try {
       const res = await systemApi.getStatus()
       setSystemStatus(res.data)
     } catch (error) {
       console.error('Failed to fetch system status:', error)
+      setSystemFetchError('系统状态更新失败')
     } finally {
       setIsLoadingSystem(false)
     }
   }, [])
 
-  // Initial fetch and auto-refresh
+  const handleManualRefresh = useCallback(() => {
+    fetchActiveTasks()
+    fetchSystemStatus()
+  }, [fetchActiveTasks, fetchSystemStatus])
+
+  const toggleAutoRefresh = useCallback(() => {
+    setIsAutoRefreshEnabled((prev) => {
+      const nextEnabled = !prev
+      if (!nextEnabled) {
+        cleanupAllConnections()
+      }
+      return nextEnabled
+    })
+  }, [cleanupAllConnections])
+
   useEffect(() => {
     fetchActiveTasks()
     fetchSystemStatus()
-    const taskIntervalId = setInterval(fetchActiveTasks, 5000)
-    const systemIntervalId = setInterval(fetchSystemStatus, 10000) // Refresh system status every 10s
-    return () => {
-      clearInterval(taskIntervalId)
-      clearInterval(systemIntervalId)
-      cleanupAllConnections()
+  }, [fetchActiveTasks, fetchSystemStatus])
+
+  useEffect(() => {
+    if (!isAutoRefreshEnabled) {
+      return
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // KPI counts
-  const processingCount = activeAnalyses.filter(a => a.status === 'processing').length
-  const pendingCount = activeAnalyses.filter(a => a.status === 'pending').length
+    const taskIntervalId = window.setInterval(fetchActiveTasks, 5000)
+    const systemIntervalId = window.setInterval(fetchSystemStatus, 10000)
+
+    return () => {
+      window.clearInterval(taskIntervalId)
+      window.clearInterval(systemIntervalId)
+    }
+  }, [isAutoRefreshEnabled, fetchActiveTasks, fetchSystemStatus])
+
+  useEffect(() => () => {
+    cleanupAllConnections()
+  }, [cleanupAllConnections])
+
+  const processingCount = activeAnalyses.filter((analysis) => analysis.status === 'processing').length
+  const pendingCount = activeAnalyses.filter((analysis) => analysis.status === 'pending').length
   const totalActive = activeAnalyses.length
+  const refreshStatusText = isAutoRefreshEnabled ? '自动刷新：已开启' : '自动刷新：已暂停'
 
-  // Table columns
   const columns: ColumnsType<ActiveAnalysis> = [
     {
       title: '序列 ID',
       dataIndex: 'id',
       width: 100,
-      render: (id) => (
-        <span style={{ fontFamily: 'monospace', fontWeight: 500, color: '#0f172a' }}>#{id}</span>
-      ),
+      render: (id) => <span className="realtime-code-text">#{id}</span>,
     },
     {
       title: '状态',
@@ -240,16 +309,14 @@ const RealTimeData: React.FC = () => {
       title: '进度',
       key: 'progress',
       render: (_, record) => (
-        <div style={{ minWidth: 200 }}>
+        <div className="realtime-progress-cell">
           <Progress
             percent={record.progress}
             size="small"
             status={record.status === 'processing' ? 'active' : 'normal'}
             strokeColor={record.status === 'processing' ? '#2563eb' : '#94a3b8'}
           />
-          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-            {record.progressMessage}
-          </div>
+          <div className="realtime-progress-text">{record.progressMessage}</div>
         </div>
       ),
     },
@@ -258,137 +325,116 @@ const RealTimeData: React.FC = () => {
       key: 'connection',
       width: 80,
       align: 'center',
-      render: (_, record) => (
-        <Tooltip title={record.wsConnected ? '实时连接中' : (record.status === 'processing' ? '轮询模式' : '等待处理')}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: record.wsConnected ? '#22c55e' : (record.status === 'processing' ? '#fbbf24' : '#cbd5e1'),
-              boxShadow: record.wsConnected ? '0 0 0 2px rgba(34, 197, 94, 0.2)' : 'none',
-            }}
-          />
-        </Tooltip>
-      ),
+      render: (_, record) => {
+        const dotClassName = record.wsConnected
+          ? 'realtime-connection-dot is-live'
+          : record.status === 'processing'
+            ? 'realtime-connection-dot is-polling'
+            : 'realtime-connection-dot is-waiting'
+
+        return (
+          <Tooltip title={record.wsConnected ? '实时连接中' : (record.status === 'processing' ? '轮询模式' : '等待处理')}>
+            <span className={dotClassName} />
+          </Tooltip>
+        )
+      },
     },
     {
       title: '类型',
       dataIndex: 'analysis_type',
       width: 120,
-      render: (type) => {
-        const typeMap: Record<string, string> = {
-          'face_segmentation': '掌子面分割',
-          'crack_detection': '裂缝检测',
-          'full': '完整分析',
-        }
-        return <span style={{ color: '#64748b' }}>{typeMap[type] || type}</span>
-      },
+      render: (type) => <span className="realtime-muted-text">{getAnalysisTypeLabel(type)}</span>,
     },
     {
       title: '创建时间',
       dataIndex: 'created_at',
       width: 120,
-      render: (d) => (
-        <span style={{ color: '#94a3b8', fontSize: 12 }}>
-          {dayjs(d).fromNow()}
-        </span>
-      ),
+      render: (date) => <span className="realtime-subtle-text">{dayjs(date).fromNow()}</span>,
     },
   ]
 
   return (
     <div>
-      {/* Page Header */}
+      <div className="realtime-toolbar">
+        <span className={`realtime-toolbar-item ${isAutoRefreshEnabled ? 'is-active' : ''}`}>{refreshStatusText}</span>
+        <span className="realtime-toolbar-item">WebSocket连接：{wsConnectionsRef.current.size}</span>
+        {taskFetchError && <span className="realtime-toolbar-item is-warning">{taskFetchError}</span>}
+        {systemFetchError && <span className="realtime-toolbar-item is-warning">{systemFetchError}</span>}
+      </div>
+
       <div className="page-header">
         <Title level={4} className="page-title">实时数据</Title>
         <Space className="page-actions">
-          <span style={{ color: '#94a3b8', fontSize: 12 }}>
+          <span className="realtime-last-refresh">
             最后刷新: {lastRefreshTime ? dayjs(lastRefreshTime).format('HH:mm:ss') : '-'}
           </span>
           <Button
-            icon={<ReloadOutlined spin={isLoadingList} />}
-            onClick={fetchActiveTasks}
-            disabled={isLoadingList}
+            icon={<ReloadOutlined spin={isLoadingList || isLoadingSystem} />}
+            onClick={handleManualRefresh}
+            disabled={isLoadingList || isLoadingSystem}
           >
             刷新
+          </Button>
+          <Button
+            type={isAutoRefreshEnabled ? 'default' : 'primary'}
+            onClick={toggleAutoRefresh}
+          >
+            {isAutoRefreshEnabled ? '暂停自动刷新' : '恢复自动刷新'}
           </Button>
         </Space>
       </div>
 
-      {/* KPI Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card">
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-              活跃任务
+          <Card bordered={false} className="kpi-card realtime-kpi-card">
+            <div className="realtime-kpi-label">活跃任务</div>
+            <div className="realtime-kpi-value-row">
+              <span className="realtime-kpi-value">{totalActive}</span>
+              <span className="realtime-kpi-unit">个</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: '30px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{totalActive}</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>个</span>
-            </div>
-            <div style={{ marginTop: 12, fontSize: '12px', color: '#64748b' }}>
-              实时监控中
-            </div>
+            <div className="realtime-kpi-desc">实时监控中</div>
           </Card>
         </Col>
 
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card" style={{ borderLeft: '4px solid #2563eb' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-              处理中
+          <Card bordered={false} className="kpi-card realtime-kpi-card realtime-kpi-card--processing">
+            <div className="realtime-kpi-label">处理中</div>
+            <div className="realtime-kpi-value-row">
+              <span className="realtime-kpi-value realtime-kpi-value--processing">{processingCount}</span>
+              <span className="realtime-kpi-unit">个</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: '30px', fontWeight: 700, color: '#2563eb', fontFamily: 'monospace' }}>{processingCount}</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>个</span>
-            </div>
-            <div style={{ marginTop: 12, fontSize: '12px', color: '#64748b' }}>
-              正在分析
-            </div>
+            <div className="realtime-kpi-desc">正在分析</div>
           </Card>
         </Col>
 
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card">
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-              等待队列
+          <Card bordered={false} className="kpi-card realtime-kpi-card">
+            <div className="realtime-kpi-label">等待队列</div>
+            <div className="realtime-kpi-value-row">
+              <span className="realtime-kpi-value">{pendingCount}</span>
+              <span className="realtime-kpi-unit">个</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: '30px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{pendingCount}</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>个</span>
-            </div>
-            <div style={{ marginTop: 12, fontSize: '12px', color: '#64748b' }}>
-              排队等待
-            </div>
+            <div className="realtime-kpi-desc">排队等待</div>
           </Card>
         </Col>
       </Row>
 
-      {/* Main Content */}
-      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        {/* Active Analyses List */}
+      <Row gutter={[16, 16]} className="realtime-main-row">
         <Col xs={24} lg={16}>
-          <Card
-            bordered={false}
-            className="kpi-card"
-            bodyStyle={{ padding: 0 }}
-          >
-            <div style={{ padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>活跃分析任务</h3>
-              <span className="status-badge neutral" style={{ fontSize: 11 }}>
-                每 5 秒自动刷新
-              </span>
+          <Card bordered={false} className="kpi-card" bodyStyle={{ padding: 0 }}>
+            <div className="realtime-card-head">
+              <h3 className="realtime-card-title">活跃分析任务</h3>
+              <span className="status-badge neutral realtime-card-badge">每 5 秒自动刷新</span>
             </div>
             {isLoadingList && activeAnalyses.length === 0 ? (
-              <div style={{ padding: 48, textAlign: 'center' }}>
+              <div className="realtime-empty-state">
                 <Spin />
               </div>
             ) : activeAnalyses.length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="当前没有活跃的分析任务"
-                style={{ padding: '48px 0' }}
+                className="realtime-empty"
               />
             ) : (
               <Table<ActiveAnalysis>
@@ -397,24 +443,21 @@ const RealTimeData: React.FC = () => {
                 columns={columns}
                 pagination={false}
                 size="middle"
-                onRow={(record) => ({
-                  onClick: () => {
-                    if (record.status === 'completed') {
-                      navigate(`/report/${record.id}`)
-                    }
-                  },
-                  style: { cursor: record.status === 'completed' ? 'pointer' : 'default' }
-                })}
+                scroll={{ x: 760 }}
               />
             )}
           </Card>
         </Col>
 
-        {/* Device Status Panel */}
         <Col xs={24} lg={8}>
-          <Card bordered={false} className="kpi-card" style={{ height: '100%' }} bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>设备状态监控</h3>
+          <Card
+            bordered={false}
+            className="kpi-card realtime-system-card"
+            style={{ height: '100%' }}
+            bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+          >
+            <div className="realtime-card-head realtime-card-head--compact">
+              <h3 className="realtime-card-title">设备状态监控</h3>
               <Button
                 size="small"
                 type="text"
@@ -423,101 +466,110 @@ const RealTimeData: React.FC = () => {
                 disabled={isLoadingSystem}
               />
             </div>
-            <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="realtime-system-body">
               {isLoadingSystem && !systemStatus ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+                <div className="realtime-empty-state realtime-empty-state--short">
                   <Spin />
                 </div>
               ) : systemStatus ? (
                 <>
-                  {/* Model Status List - using real data */}
-                  {systemStatus.models.map((model, index) => (
-                    <div key={index} style={{ padding: '12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #f1f5f9' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span
-                            style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: model.status === 'online' ? '#22c55e' : model.status === 'standby' ? '#fbbf24' : '#ef4444',
-                              boxShadow: model.status === 'online' ? '0 0 0 2px rgba(34, 197, 94, 0.2)' : 'none',
-                            }}
-                          />
-                          <span style={{ fontSize: 13, fontWeight: 500, color: '#334155' }}>{model.name}</span>
-                        </div>
-                        <Tag color={model.status === 'online' ? 'success' : model.status === 'standby' ? 'warning' : 'error'} style={{ margin: 0 }}>
-                          {model.status === 'online' ? '运行中' : model.status === 'standby' ? '待机' : '离线'}
-                        </Tag>
-                      </div>
-                      <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#94a3b8' }}>
-                        <span>{model.version}</span>
-                        <span>{model.speed || '-'}</span>
-                      </div>
-                    </div>
-                  ))}
+                  {systemStatus.models.map((model, index) => {
+                    const statusClassName = model.status === 'online'
+                      ? 'realtime-connection-dot is-live'
+                      : model.status === 'standby'
+                        ? 'realtime-connection-dot is-polling'
+                        : 'realtime-connection-dot is-offline'
 
-                  {/* System Resources - using real data */}
-                  <Divider style={{ margin: '8px 0' }} />
-                  <div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12, fontWeight: 500 }}>系统资源</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                          <span style={{ color: '#64748b' }}>CPU</span>
-                          <span style={{ color: '#334155', fontFamily: 'monospace' }}>{systemStatus.resources.cpu_percent}%</span>
+                    return (
+                      <div key={`${model.name}-${index}`} className="realtime-model-card">
+                        <div className="realtime-model-header">
+                          <div className="realtime-model-title-wrap">
+                            <span className={statusClassName} />
+                            <span className="realtime-model-name">{model.name}</span>
+                          </div>
+                          <Tag color={getModelStatusColor(model.status)} className="realtime-model-tag">
+                            {getModelStatusText(model.status)}
+                          </Tag>
                         </div>
-                        <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 99 }}>
-                          <div style={{ width: `${systemStatus.resources.cpu_percent}%`, height: '100%', background: '#2563eb', borderRadius: 99, transition: 'width 0.3s' }} />
+                        <div className="realtime-model-meta">
+                          <span>{model.version}</span>
+                          <span>{model.speed || '-'}</span>
                         </div>
                       </div>
+                    )
+                  })}
+
+                  <Divider className="realtime-system-divider" />
+
+                  <div>
+                    <div className="realtime-resource-title">系统资源</div>
+                    <div className="realtime-resource-list">
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                          <span style={{ color: '#64748b' }}>内存</span>
-                          <span style={{ color: '#334155', fontFamily: 'monospace' }}>
+                        <div className="realtime-resource-row">
+                          <span className="realtime-resource-label">CPU</span>
+                          <span className="realtime-resource-value">{systemStatus.resources.cpu_percent}%</span>
+                        </div>
+                        <div className="realtime-resource-bar-track">
+                          <div
+                            className="realtime-resource-bar is-cpu"
+                            style={{ width: `${clampPercent(systemStatus.resources.cpu_percent)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="realtime-resource-row">
+                          <span className="realtime-resource-label">内存</span>
+                          <span className="realtime-resource-value">
                             {systemStatus.resources.memory_percent}% ({systemStatus.resources.memory_used_gb}/{systemStatus.resources.memory_total_gb} GB)
                           </span>
                         </div>
-                        <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 99 }}>
-                          <div style={{ width: `${systemStatus.resources.memory_percent}%`, height: '100%', background: '#8b5cf6', borderRadius: 99, transition: 'width 0.3s' }} />
+                        <div className="realtime-resource-bar-track">
+                          <div
+                            className="realtime-resource-bar is-memory"
+                            style={{ width: `${clampPercent(systemStatus.resources.memory_percent)}%` }}
+                          />
                         </div>
                       </div>
+
                       {systemStatus.resources.gpu_available ? (
                         <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                            <span style={{ color: '#64748b' }}>GPU</span>
-                            <span style={{ color: '#334155', fontFamily: 'monospace' }}>
+                          <div className="realtime-resource-row">
+                            <span className="realtime-resource-label">GPU</span>
+                            <span className="realtime-resource-value">
                               {systemStatus.resources.gpu_percent ?? 0}%
                               {systemStatus.resources.gpu_memory_used_gb !== null && (
                                 <> ({systemStatus.resources.gpu_memory_used_gb}/{systemStatus.resources.gpu_memory_total_gb} GB)</>
                               )}
                             </span>
                           </div>
-                          <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 99 }}>
-                            <div style={{ width: `${systemStatus.resources.gpu_percent ?? 0}%`, height: '100%', background: '#10b981', borderRadius: 99, transition: 'width 0.3s' }} />
+                          <div className="realtime-resource-bar-track">
+                            <div
+                              className="realtime-resource-bar is-gpu"
+                              style={{ width: `${clampPercent(systemStatus.resources.gpu_percent)}%` }}
+                            />
                           </div>
                         </div>
                       ) : (
                         <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                            <span style={{ color: '#94a3b8' }}>GPU</span>
-                            <span style={{ color: '#cbd5e1', fontFamily: 'monospace' }}>未检测到</span>
+                          <div className="realtime-resource-row">
+                            <span className="realtime-resource-label realtime-resource-label--disabled">GPU</span>
+                            <span className="realtime-resource-value realtime-resource-value--disabled">未检测到</span>
                           </div>
-                          <div style={{ width: '100%', height: 6, background: '#f1f5f9', borderRadius: 99 }}>
-                            <div style={{ width: '0%', height: '100%', background: '#94a3b8', borderRadius: 99 }} />
+                          <div className="realtime-resource-bar-track">
+                            <div className="realtime-resource-bar is-none" style={{ width: '0%' }} />
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Uptime info */}
                   {systemStatus.uptime_seconds !== null && (
-                    <div style={{ marginTop: 'auto', padding: '12px', background: '#f0fdf4', borderRadius: 6, border: '1px solid #dcfce7' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                        <CheckCircleOutlined style={{ color: '#16a34a', marginTop: 2 }} />
-                        <span style={{ fontSize: 11, color: '#166534', lineHeight: 1.5 }}>
-                          系统已运行 {Math.floor(systemStatus.uptime_seconds / 3600)} 小时 {Math.floor((systemStatus.uptime_seconds % 3600) / 60)} 分钟
+                    <div className="realtime-uptime-card">
+                      <div className="realtime-uptime-row">
+                        <CheckCircleOutlined className="realtime-uptime-icon" />
+                        <span className="realtime-uptime-text">
+                          系统已运行 {formatUptime(systemStatus.uptime_seconds)}
                         </span>
                       </div>
                     </div>
