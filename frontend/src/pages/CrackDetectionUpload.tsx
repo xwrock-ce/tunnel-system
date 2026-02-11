@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Card, Button, Form, Progress, Result, Row, Col,
+  Card, Button, Form, Progress, Row, Col,
   Typography, Image, Tag, Divider, message, Space, Tabs, Alert, Statistic
 } from 'antd'
 import { ReloadOutlined, FileSearchOutlined, HistoryOutlined, DeleteOutlined, PaperClipOutlined, WarningOutlined } from '@ant-design/icons'
@@ -9,6 +9,8 @@ import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title, Text } = Typography
 
@@ -42,7 +44,7 @@ const CrackDetectionUpload: React.FC = () => {
 
   const isAnalyzingForPage = isAnalyzing && currentAnalysisType === 'crack_detection'
   const selectedCount = mode === 'single' ? (singleFile ? 1 : 0) : batchFiles.length
-  const modeText = mode === 'single' ? '单张模式' : '批量模式'
+  const modeText = mode === 'single' ? UI_COPY.upload.crack.status.singleMode : UI_COPY.upload.crack.status.batchMode
 
   useEffect(() => {
     if (isAnalyzingForPage) return
@@ -144,16 +146,16 @@ const CrackDetectionUpload: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="upload-page">
       <div className="page-header">
         <Title level={4} className="page-title">
-          裂缝检测
+          {UI_COPY.upload.crack.pageTitle}
         </Title>
       </div>
 
       <Alert
-        message="裂缝检测功能"
-        description="上传混凝土表面图片，系统将自动检测裂缝位置并标记。使用 YOLOv11 深度学习模型进行精确检测，支持多种裂缝类型识别。"
+        message={UI_COPY.upload.crack.alert.message}
+        description={UI_COPY.upload.crack.alert.description}
         type="warning"
         showIcon
         icon={<WarningOutlined />}
@@ -162,9 +164,9 @@ const CrackDetectionUpload: React.FC = () => {
 
       <div className="upload-status-strip upload-status-strip-warning">
         <span className="upload-status-item">{modeText}</span>
-        <span className="upload-status-item">已选文件：{selectedCount}</span>
+        <span className="upload-status-item">{UI_COPY.upload.crack.status.selectedPrefix}{selectedCount}</span>
         <span className={`upload-status-item ${isAnalyzingForPage ? 'is-active' : ''}`}>
-          {isAnalyzingForPage ? '检测进行中' : '待开始'}
+          {isAnalyzingForPage ? UI_COPY.upload.crack.status.active : UI_COPY.upload.crack.status.idle}
         </span>
       </div>
 
@@ -176,12 +178,12 @@ const CrackDetectionUpload: React.FC = () => {
         items={[
           {
             key: 'single',
-            label: '单张检测',
+            label: UI_COPY.upload.crack.tabs.single,
             children: currentAnalysis && currentAnalysis.analysis_type === 'crack_detection' ? (
               <Card
                 title={
                   <Space>
-                    <span>检测结果</span>
+                    <span>{UI_COPY.upload.crack.resultCardTitle}</span>
                     {currentAnalysis.metrics && getCrackSeverityTag(currentAnalysis.metrics.crack_count || 0)}
                   </Space>
                 }
@@ -192,10 +194,10 @@ const CrackDetectionUpload: React.FC = () => {
                       onClick={() => navigate(`/report/${currentAnalysis.id}`)}
                       disabled={currentAnalysis.status !== 'completed'}
                     >
-                      查看报告
+                      {UI_COPY.upload.crack.detailButtons.viewReport}
                     </Button>
                     <Button icon={<ReloadOutlined />} onClick={handleResetSingle}>
-                      新检测
+                      {UI_COPY.upload.crack.detailButtons.restart}
                     </Button>
                   </Space>
                 }
@@ -207,7 +209,7 @@ const CrackDetectionUpload: React.FC = () => {
                     <Row gutter={24}>
                       <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>原始图片</Text>
+                          <Text strong>{UI_COPY.upload.crack.preview.original}</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
@@ -216,7 +218,7 @@ const CrackDetectionUpload: React.FC = () => {
                       </Col>
                       <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>裂缝检测结果</Text>
+                          <Text strong>{UI_COPY.upload.crack.preview.result}</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'crack_overlay')}
@@ -231,7 +233,7 @@ const CrackDetectionUpload: React.FC = () => {
                     <Row gutter={[24, 24]}>
                       <Col xs={12} sm={8}>
                         <Statistic
-                          title="检测到的裂缝数量"
+                          title={UI_COPY.upload.crack.metrics.crackCount}
                           value={currentAnalysis.metrics?.crack_count || 0}
                           suffix="条"
                           valueStyle={{ color: (currentAnalysis.metrics?.crack_count || 0) > 0 ? '#cf1322' : '#3f8600' }}
@@ -239,7 +241,7 @@ const CrackDetectionUpload: React.FC = () => {
                       </Col>
                       <Col xs={12} sm={8}>
                         <Statistic
-                          title="检测置信度"
+                          title={UI_COPY.upload.crack.metrics.confidence}
                           value={((currentAnalysis.metrics?.crack_confidence || 0) * 100).toFixed(1)}
                           suffix="%"
                           precision={1}
@@ -247,7 +249,7 @@ const CrackDetectionUpload: React.FC = () => {
                       </Col>
                       <Col xs={12} sm={8}>
                         <Statistic
-                          title="检测区域像素"
+                          title={UI_COPY.upload.crack.metrics.areaPixels}
                           value={currentAnalysis.metrics?.crack_pixel_count || 0}
                           suffix="px"
                         />
@@ -258,8 +260,8 @@ const CrackDetectionUpload: React.FC = () => {
                       <>
                         <Divider />
                         <Alert
-                          message="检测到裂缝"
-                          description={`在图片中检测到 ${currentAnalysis.metrics?.crack_count} 条裂缝，建议进行进一步检查和维护。`}
+                          message={UI_COPY.upload.crack.crackDetected.message}
+                          description={UI_COPY.upload.crack.crackDetected.description(currentAnalysis.metrics?.crack_count || 0)}
                           type="warning"
                           showIcon
                         />
@@ -267,24 +269,31 @@ const CrackDetectionUpload: React.FC = () => {
                     )}
                   </>
                 ) : currentAnalysis.status === 'failed' ? (
-                  <Result
-                    status="error"
-                    title="检测失败"
-                    subTitle={currentAnalysis.error_message}
-                    extra={
+                  <StatePanel
+                    mode="error"
+                    title={UI_COPY.upload.crackTaskFailed.title}
+                    description={currentAnalysis.error_message || UI_COPY.upload.crackTaskFailed.fallbackDescription}
+                    variant="card"
+                    action={
                       <Button type="primary" onClick={handleResetSingle}>
-                        重新检测
+                        {UI_COPY.upload.crackTaskFailed.actionText}
                       </Button>
                     }
                   />
                 ) : (
-                  <Result status="info" title="处理中" subTitle="请稍候…" />
+                  <StatePanel
+                    mode="info"
+                    title={UI_COPY.upload.crackTaskProcessing.title}
+                    description={UI_COPY.upload.crackTaskProcessing.description}
+                    variant="card"
+                    compact
+                  />
                 )}
               </Card>
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择混凝土表面图片" variant="borderless" className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.crack.cards.singleImage} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzingForPage}
@@ -325,7 +334,7 @@ const CrackDetectionUpload: React.FC = () => {
 
                 <Col xs={24} lg={8}>
                   <Card
-                    title="检测设置"
+                    title={UI_COPY.upload.crack.cards.config}
                     variant="borderless"
                     className="card-surface upload-config-card"
                   >
@@ -337,8 +346,8 @@ const CrackDetectionUpload: React.FC = () => {
                       }}
                     >
                       <Alert
-                        message="自动检测"
-                        description="系统将使用预训练的 YOLOv11 模型自动检测图片中的裂缝，无需额外参数设置。"
+                        message={UI_COPY.upload.crack.configAlert.single.message}
+                        description={UI_COPY.upload.crack.configAlert.single.description}
                         type="info"
                         className="upload-page-alert"
                       />
@@ -353,7 +362,7 @@ const CrackDetectionUpload: React.FC = () => {
                           size="large"
                           className="upload-warn-btn"
                         >
-                          {isAnalyzingForPage ? '检测中…' : '开始裂缝检测'}
+                          {isAnalyzingForPage ? UI_COPY.upload.crack.buttons.detecting : UI_COPY.upload.crack.buttons.startSingle}
                         </Button>
                       </Form.Item>
                     </Form>
@@ -364,19 +373,20 @@ const CrackDetectionUpload: React.FC = () => {
           },
           {
             key: 'batch',
-            label: '批量检测',
+            label: UI_COPY.upload.crack.tabs.batch,
             children: batchTaskIds ? (
               <Card variant="borderless" className="card-surface">
-                <Result
-                  status="success"
-                  title="批量任务已启动"
-                  subTitle={`已提交 ${batchTaskIds.length} 张图片进行裂缝检测，任务将在后台依次处理。`}
-                  extra={
+                <StatePanel
+                  mode="info"
+                  title={UI_COPY.upload.batchStarted.title}
+                  description={UI_COPY.upload.batchStarted.crackDescription(batchTaskIds.length)}
+                  variant="card"
+                  action={
                     <Space>
                       <Button icon={<HistoryOutlined />} type="primary" onClick={() => navigate('/history')}>
-                        去历史记录查看
+                        {UI_COPY.upload.batchStarted.actions.viewHistory}
                       </Button>
-                      <Button onClick={handleResetBatch}>继续批量上传</Button>
+                      <Button onClick={handleResetBatch}>{UI_COPY.upload.batchStarted.actions.continueUpload}</Button>
                     </Space>
                   }
                 />
@@ -384,7 +394,7 @@ const CrackDetectionUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.crack.cards.batchImages} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -396,7 +406,7 @@ const CrackDetectionUpload: React.FC = () => {
                     {batchFiles.length > 0 && (
                       <div className="upload-preview-panel">
                         <div className="upload-file-row-head">
-                          <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
+                          <Text type="secondary">{UI_COPY.upload.shared.selectedFilesText(batchFiles.length)}</Text>
                           <Button
                             type="link"
                             size="small"
@@ -404,7 +414,7 @@ const CrackDetectionUpload: React.FC = () => {
                             onClick={handleResetBatch}
                             disabled={isAnalyzingForPage}
                           >
-                            清空
+                            {UI_COPY.upload.crack.buttons.clear}
                           </Button>
                         </div>
                         <div className="upload-file-list">
@@ -439,7 +449,7 @@ const CrackDetectionUpload: React.FC = () => {
                 </Col>
                 <Col xs={24} lg={8}>
                   <Card
-                    title="检测设置"
+                    title={UI_COPY.upload.crack.cards.config}
                     variant="borderless"
                     className="card-surface upload-config-card"
                   >
@@ -448,8 +458,8 @@ const CrackDetectionUpload: React.FC = () => {
                       layout="vertical"
                     >
                       <Alert
-                        message="批量自动检测"
-                        description="所有图片将使用相同的检测模型进行处理，结果可在历史记录中查看。"
+                        message={UI_COPY.upload.crack.configAlert.batch.message}
+                        description={UI_COPY.upload.crack.configAlert.batch.description}
                         type="info"
                         className="upload-page-alert"
                       />
@@ -464,12 +474,12 @@ const CrackDetectionUpload: React.FC = () => {
                           size="large"
                           className="upload-warn-btn"
                         >
-                          {isAnalyzingForPage ? '提交中…' : '开始批量检测'}
+                          {isAnalyzingForPage ? UI_COPY.upload.crack.buttons.submitting : UI_COPY.upload.crack.buttons.startBatch}
                         </Button>
                       </Form.Item>
                       <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
-                          查看历史记录
+                          {UI_COPY.upload.crack.buttons.viewHistory}
                         </Button>
                       </Form.Item>
                     </Form>

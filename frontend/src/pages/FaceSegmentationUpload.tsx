@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Card, Button, Form, InputNumber, Progress, Result, Row, Col,
+  Card, Button, Form, InputNumber, Progress, Row, Col,
   Typography, Image, Tag, Descriptions, Divider, message, Space, Tabs, Alert
 } from 'antd'
 import { ReloadOutlined, FileSearchOutlined, HistoryOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
@@ -9,6 +9,8 @@ import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title, Text } = Typography
 
@@ -42,7 +44,7 @@ const FaceSegmentationUpload: React.FC = () => {
 
   const isAnalyzingForPage = isAnalyzing && currentAnalysisType === 'face_segmentation'
   const selectedCount = mode === 'single' ? (singleFile ? 1 : 0) : batchFiles.length
-  const modeText = mode === 'single' ? '单张模式' : '批量模式'
+  const modeText = mode === 'single' ? UI_COPY.upload.face.status.singleMode : UI_COPY.upload.face.status.batchMode
 
   useEffect(() => {
     if (isAnalyzingForPage) return
@@ -149,16 +151,16 @@ const FaceSegmentationUpload: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="upload-page">
       <div className="page-header">
         <Title level={4} className="page-title">
-          掌子面分割
+          {UI_COPY.upload.face.pageTitle}
         </Title>
       </div>
 
       <Alert
-        message="掌子面分割功能"
-        description="上传隧道掌子面图片，系统将自动识别掌子面区域并计算超/欠挖情况。使用 YOLOv11 + SAM2 深度学习模型进行精确分割。"
+        message={UI_COPY.upload.face.alert.message}
+        description={UI_COPY.upload.face.alert.description}
         type="info"
         showIcon
         className="upload-page-alert"
@@ -166,9 +168,9 @@ const FaceSegmentationUpload: React.FC = () => {
 
       <div className="upload-status-strip">
         <span className="upload-status-item">{modeText}</span>
-        <span className="upload-status-item">已选文件：{selectedCount}</span>
+        <span className="upload-status-item">{UI_COPY.upload.face.status.selectedPrefix}{selectedCount}</span>
         <span className={`upload-status-item ${isAnalyzingForPage ? 'is-active' : ''}`}>
-          {isAnalyzingForPage ? '分析进行中' : '待开始'}
+          {isAnalyzingForPage ? UI_COPY.upload.face.status.active : UI_COPY.upload.face.status.idle}
         </span>
       </div>
 
@@ -180,12 +182,12 @@ const FaceSegmentationUpload: React.FC = () => {
         items={[
           {
             key: 'single',
-            label: '单张分析',
+            label: UI_COPY.upload.face.tabs.single,
             children: currentAnalysis && currentAnalysis.analysis_type === 'face_segmentation' ? (
               <Card
                 title={
                   <Space>
-                    <span>分析结果</span>
+                    <span>{UI_COPY.upload.face.resultCardTitle}</span>
                     {currentAnalysis.excavation && getStatusTag(currentAnalysis.excavation.status)}
                   </Space>
                 }
@@ -196,10 +198,10 @@ const FaceSegmentationUpload: React.FC = () => {
                       onClick={() => navigate(`/report/${currentAnalysis.id}`)}
                       disabled={currentAnalysis.status !== 'completed'}
                     >
-                      查看报告
+                      {UI_COPY.upload.face.detailButtons.viewReport}
                     </Button>
                     <Button icon={<ReloadOutlined />} onClick={handleResetSingle}>
-                      新分析
+                      {UI_COPY.upload.face.detailButtons.restart}
                     </Button>
                   </Space>
                 }
@@ -211,7 +213,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     <Row gutter={24}>
                       <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>原始图片</Text>
+                          <Text strong>{UI_COPY.upload.face.preview.original}</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
@@ -220,7 +222,7 @@ const FaceSegmentationUpload: React.FC = () => {
                       </Col>
                       <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>掌子面分割结果</Text>
+                          <Text strong>{UI_COPY.upload.face.preview.result}</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'overlay')}
@@ -231,7 +233,7 @@ const FaceSegmentationUpload: React.FC = () => {
 
                     <Divider />
 
-                    <Descriptions title="超欠挖分析" bordered column={{ xs: 1, sm: 2, md: 3 }}>
+                    <Descriptions title={UI_COPY.upload.shared.analysisSummaryTitle} bordered column={{ xs: 1, sm: 2, md: 3 }}>
                       <Descriptions.Item label="像素数量">
                         {currentAnalysis.excavation.pixel_count.toLocaleString()}
                       </Descriptions.Item>
@@ -264,24 +266,31 @@ const FaceSegmentationUpload: React.FC = () => {
                     </Descriptions>
                   </>
                 ) : currentAnalysis.status === 'failed' ? (
-                  <Result
-                    status="error"
-                    title="分析失败"
-                    subTitle={currentAnalysis.error_message}
-                    extra={
+                  <StatePanel
+                    mode="error"
+                    title={UI_COPY.upload.taskFailed.title}
+                    description={currentAnalysis.error_message || UI_COPY.upload.taskFailed.fallbackDescription}
+                    variant="card"
+                    action={
                       <Button type="primary" onClick={handleResetSingle}>
-                        重新分析
+                        {UI_COPY.upload.taskFailed.actionText}
                       </Button>
                     }
                   />
                 ) : (
-                  <Result status="info" title="处理中" subTitle="请稍候…" />
+                  <StatePanel
+                    mode="info"
+                    title={UI_COPY.upload.faceTaskProcessing.title}
+                    description={UI_COPY.upload.faceTaskProcessing.description}
+                    variant="card"
+                    compact
+                  />
                 )}
               </Card>
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择隧道掌子面图片" variant="borderless" className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.face.cards.singleImage} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzingForPage}
@@ -322,9 +331,9 @@ const FaceSegmentationUpload: React.FC = () => {
 
                 <Col xs={24} lg={8}>
                   <Card
-                    title="分析参数"
+                    title={UI_COPY.upload.face.cards.config}
                     variant="borderless"
-                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                     className="card-surface upload-config-card"
                   >
                     <Form
@@ -335,11 +344,11 @@ const FaceSegmentationUpload: React.FC = () => {
                         scale: analysisDefaults.scale,
                       }}
                     >
-                      <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
+                      <Form.Item name="design_area" label={UI_COPY.upload.shared.fields.designAreaLabel} tooltip={UI_COPY.upload.shared.fields.designAreaTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
-                      <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
+                      <Form.Item name="scale" label={UI_COPY.upload.shared.fields.scaleLabel} tooltip={UI_COPY.upload.shared.fields.scaleTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>  
 
@@ -352,7 +361,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           block
                           size="large"
                         >
-                          {isAnalyzingForPage ? '分析中…' : '开始掌子面分割'}
+                          {isAnalyzingForPage ? UI_COPY.upload.face.buttons.analyzing : UI_COPY.upload.face.buttons.startSingle}
                         </Button>
                       </Form.Item>
                     </Form>
@@ -363,19 +372,20 @@ const FaceSegmentationUpload: React.FC = () => {
           },
           {
             key: 'batch',
-            label: '批量分析',
+            label: UI_COPY.upload.face.tabs.batch,
             children: batchTaskIds ? (
               <Card variant="borderless" className="card-surface">
-                <Result
-                  status="success"
-                  title="批量任务已启动"
-                  subTitle={`已提交 ${batchTaskIds.length} 张图片进行掌子面分割，任务将在后台依次处理。`}
-                  extra={
+                <StatePanel
+                  mode="info"
+                  title={UI_COPY.upload.batchStarted.title}
+                  description={UI_COPY.upload.batchStarted.faceDescription(batchTaskIds.length)}
+                  variant="card"
+                  action={
                     <Space>
                       <Button icon={<HistoryOutlined />} type="primary" onClick={() => navigate('/history')}>
-                        去历史记录查看
+                        {UI_COPY.upload.batchStarted.actions.viewHistory}
                       </Button>
-                      <Button onClick={handleResetBatch}>继续批量上传</Button>
+                      <Button onClick={handleResetBatch}>{UI_COPY.upload.batchStarted.actions.continueUpload}</Button>
                     </Space>
                   }
                 />
@@ -383,7 +393,7 @@ const FaceSegmentationUpload: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" variant="borderless" className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.face.cards.batchImages} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -395,7 +405,7 @@ const FaceSegmentationUpload: React.FC = () => {
                     {batchFiles.length > 0 && (
                       <div className="upload-preview-panel">
                         <div className="upload-file-row-head">
-                          <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
+                          <Text type="secondary">{UI_COPY.upload.shared.selectedFilesText(batchFiles.length)}</Text>
                           <Button
                             type="link"
                             size="small"
@@ -403,7 +413,7 @@ const FaceSegmentationUpload: React.FC = () => {
                             onClick={handleResetBatch}
                             disabled={isAnalyzingForPage}
                           >
-                            清空
+                            {UI_COPY.upload.face.buttons.clear}
                           </Button>
                         </div>
                         <div className="upload-file-list">
@@ -438,9 +448,9 @@ const FaceSegmentationUpload: React.FC = () => {
                 </Col>
                 <Col xs={24} lg={8}>
                   <Card
-                    title="分析参数"
+                    title={UI_COPY.upload.face.cards.config}
                     variant="borderless"
-                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                     className="card-surface upload-config-card"
                   >
                     <Form
@@ -451,11 +461,11 @@ const FaceSegmentationUpload: React.FC = () => {
                         scale: analysisDefaults.scale,
                       }}
                     >
-                      <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
+                      <Form.Item name="design_area" label={UI_COPY.upload.shared.fields.designAreaLabel} tooltip={UI_COPY.upload.shared.fields.designAreaTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
-                      <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
+                      <Form.Item name="scale" label={UI_COPY.upload.shared.fields.scaleLabel} tooltip={UI_COPY.upload.shared.fields.scaleTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
@@ -468,12 +478,12 @@ const FaceSegmentationUpload: React.FC = () => {
                           block
                           size="large"
                         >
-                          { isAnalyzingForPage ? '提交中…' : '开始批量分割'}
+                          {isAnalyzingForPage ? UI_COPY.upload.face.buttons.submitting : UI_COPY.upload.face.buttons.startBatch}
                         </Button>
                       </Form.Item>
                       <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
-                          查看历史记录
+                          {UI_COPY.upload.face.buttons.viewHistory}
                         </Button>
                       </Form.Item>
                     </Form>

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Card, Table, Tag, Button, Space, Modal, Select, Typography, message, Input, Empty,
+  Card, Table, Tag, Button, Space, Modal, Select, Typography, message, Input,
 } from 'antd'
 import { EyeOutlined, DeleteOutlined, ReloadOutlined, DownloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { AnalysisListItem } from '@/api/client'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title } = Typography
 const { Option } = Select
@@ -18,6 +20,7 @@ const History: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | undefined>()
   const [searchInput, setSearchInput] = useState<string>('')
   const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const [savedFilters, setSavedFilters] = useState<Array<{ key: string; label: string; status?: string; keyword: string }>>([])
 
   const {
     analyses,
@@ -52,6 +55,54 @@ const History: React.FC = () => {
     fetchAnalyses(1, statusFilter, searchKeyword)
   }, [fetchAnalyses, statusFilter, searchKeyword])
 
+  useEffect(() => {
+    const raw = window.localStorage.getItem('history_saved_filters')
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as Array<{ key: string; label: string; status?: string; keyword: string }>
+      if (Array.isArray(parsed)) {
+        setSavedFilters(parsed.slice(0, 6))
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const persistSavedFilters = (filters: Array<{ key: string; label: string; status?: string; keyword: string }>) => {
+    setSavedFilters(filters)
+    window.localStorage.setItem('history_saved_filters', JSON.stringify(filters))
+  }
+
+  const handleSaveCurrentFilter = () => {
+    const keyword = searchKeyword.trim()
+    const statusText = statusFilter === 'over_excavation'
+      ? UI_COPY.history.filters.over
+      : statusFilter === 'under_excavation'
+        ? UI_COPY.history.filters.under
+        : statusFilter === 'within_tolerance'
+          ? UI_COPY.history.filters.normal
+          : UI_COPY.history.filters.allSimple
+
+    const keywordText = keyword || '全部'
+    const label = `${statusText} · ${keywordText}`
+    const key = `${Date.now()}`
+
+    const next = [{ key, label, status: statusFilter, keyword }, ...savedFilters].slice(0, 6)
+    persistSavedFilters(next)
+    message.success(UI_COPY.history.actions.savedSuccess)
+  }
+
+  const handleApplySavedFilter = (item: { status?: string; keyword: string }) => {
+    setStatusFilter(item.status)
+    setSearchInput(item.keyword)
+    setSearchKeyword(item.keyword)
+  }
+
+  const handleRemoveSavedFilter = (key: string) => {
+    const next = savedFilters.filter((item) => item.key !== key)
+    persistSavedFilters(next)
+  }
+
   const handleSearchSubmit = (value: string) => {
     const normalized = value.trim()
     setSearchInput(normalized)
@@ -81,11 +132,11 @@ const History: React.FC = () => {
   const getStatusTag = (status: string | undefined) => {
     switch (status) {
       case 'over_excavation':
-        return <Tag color="red">超挖</Tag>
+        return <Tag color="red">{UI_COPY.history.filters.over}</Tag>
       case 'under_excavation':
-        return <Tag color="orange">欠挖</Tag>
+        return <Tag color="orange">{UI_COPY.history.filters.under}</Tag>
       case 'within_tolerance':
-        return <Tag color="green">合格</Tag>
+        return <Tag color="green">{UI_COPY.history.filters.normal}</Tag>
       default:
         return <Tag color="default">-</Tag>
     }
@@ -220,68 +271,116 @@ const History: React.FC = () => {
 
   const statusFilterLabel =
     statusFilter === 'over_excavation'
-      ? '超挖'
+      ? UI_COPY.history.filters.over
       : statusFilter === 'under_excavation'
-        ? '欠挖'
+        ? UI_COPY.history.filters.under
         : statusFilter === 'within_tolerance'
-          ? '合格'
-          : '全部状态'
+          ? UI_COPY.history.filters.normal
+          : UI_COPY.history.filters.all
 
   return (
     <div className="history-page">
       <div className="page-header">
-        <Title level={4} className="page-title">
-          历史记录
-        </Title>
-        <Space wrap className="page-actions">
-          <span className="history-summary">筛选：{statusFilterLabel} · 共 {totalCount} 条</span>
-          {searchKeyword && <span className="history-summary">关键词：{searchKeyword}</span>}
-          <Input.Search
-            placeholder="输入 ID 或关键词"
-            allowClear
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            onSearch={handleSearchSubmit}
-            className="history-search-input"
-          />
-          <Select
-            placeholder="筛选状态"
-            allowClear
-            value={statusFilter}
-            onChange={setStatusFilter}
-            className="history-filter-select"
-          >
-            <Option value="over_excavation">超挖</Option>
-            <Option value="under_excavation">欠挖</Option>
-            <Option value="within_tolerance">合格</Option>
-          </Select>
-          <Button
-            icon={<ReloadOutlined spin={isLoadingList} />}
-            onClick={() => fetchAnalyses(currentPage, statusFilter, searchKeyword)}
-            loading={isLoadingList}
-          >
-            刷新
-          </Button>
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={exportCurrentPage}
-            disabled={analyses.length === 0}
-          >
-            导出当前页
-          </Button>
-        </Space>
+        <div className="history-header-main">
+          <Title level={4} className="page-title">
+            {UI_COPY.history.header.title}
+          </Title>
+          <p className="history-header-desc">{UI_COPY.history.header.description}</p>
+        </div>
+
+        <div className="history-filter-panel">
+          <div className="history-filter-row history-filter-row--meta">
+            <span className="history-summary">{UI_COPY.history.summary.filterPrefix}：{statusFilterLabel} · 共 {totalCount} {UI_COPY.history.summary.totalSuffix}</span>
+            {searchKeyword && <span className="history-summary">{UI_COPY.history.summary.keywordPrefix}：{searchKeyword}</span>}
+            <Button size="small" type="text" onClick={handleSaveCurrentFilter}>
+              {UI_COPY.history.actions.saveCurrentFilter}
+            </Button>
+          </div>
+
+          {savedFilters.length > 0 && (
+            <div className="history-filter-row history-filter-row--saved">
+              {savedFilters.map((item) => (
+                <span key={item.key} className="history-saved-pill">
+                  <button
+                    type="button"
+                    className="history-saved-pill-main"
+                    onClick={() => handleApplySavedFilter(item)}
+                  >
+                    {item.label}
+                  </button>
+                  <button
+                    type="button"
+                    className="history-saved-pill-remove"
+                    onClick={() => handleRemoveSavedFilter(item.key)}
+                    aria-label={`删除筛选 ${item.label}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="history-filter-row history-filter-row--actions">
+            <Input.Search
+              placeholder={UI_COPY.history.filters.searchPlaceholder}
+              allowClear
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              onSearch={handleSearchSubmit}
+              className="history-search-input"
+            />
+            <Select
+              placeholder={UI_COPY.history.filters.statusPlaceholder}
+              allowClear
+              value={statusFilter}
+              onChange={setStatusFilter}
+              className="history-filter-select"
+            >
+              <Option value="over_excavation">{UI_COPY.history.filters.over}</Option>
+              <Option value="under_excavation">{UI_COPY.history.filters.under}</Option>
+              <Option value="within_tolerance">{UI_COPY.history.filters.normal}</Option>
+            </Select>
+            <Space className="history-filter-cta" wrap>
+              <Button
+                icon={<ReloadOutlined spin={isLoadingList} />}
+                onClick={() => fetchAnalyses(currentPage, statusFilter, searchKeyword)}
+                loading={isLoadingList}
+              >
+                刷新
+              </Button>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={exportCurrentPage}
+                disabled={analyses.length === 0}
+              >
+                导出当前页
+              </Button>
+            </Space>
+          </div>
+        </div>
       </div>
 
       <Card bordered={false} className="card-surface data-table-card">
         <Table
           columns={columns}
           dataSource={analyses}
+          className="history-table"
           rowKey="id"
           loading={isLoadingList}
           size="middle"
+          sticky
           scroll={{ x: 980 }}
           locale={{
-            emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无历史记录" />,
+            emptyText: (
+              <StatePanel
+                mode="empty"
+                title={UI_COPY.history.tableEmpty.title}
+                description={UI_COPY.history.tableEmpty.description}
+                variant="table"
+                compact
+              />
+            ),
           }}
           rowClassName={(record) => (canOpenReport(record) ? 'table-row-clickable' : 'table-row-disabled')}
           onRow={(record) => ({

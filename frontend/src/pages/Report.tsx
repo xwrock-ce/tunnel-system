@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card, Row, Col, Typography, Tag, Descriptions, Button,
-  Spin, Result, Divider, Tabs, Space, Statistic, Empty
+  Divider, Tabs, Space, Statistic, Skeleton
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -17,6 +17,8 @@ import {
 import dayjs from 'dayjs'
 import { analysisApi, AnalysisResponse } from '@/api/client'
 import ImageComparison, { type ImageComparisonHeight } from '@/components/ImageComparison'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title, Text } = Typography
 
@@ -39,7 +41,7 @@ const Report: React.FC = () => {
         const res = await analysisApi.get(parseInt(id))
         setAnalysis(res.data)
       } catch (err: any) {
-        setError(err.response?.data?.detail || '加载失败')
+        setError(err.response?.data?.detail || UI_COPY.report.loadError.fallbackDescription)
       } finally {
         setIsLoading(false)
       }
@@ -49,42 +51,69 @@ const Report: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="report-loading">
-        <Spin size="large" tip="加载分析数据..." />
+      <div className="report-page report-page-unified report-loading-shell">
+        <div className="page-header report-header">
+          <Skeleton active title={{ width: '42%' }} paragraph={{ rows: 1 }} />
+        </div>
+
+        <Row gutter={[24, 24]}>
+          <Col xs={24} xl={16}>
+            <Card bordered={false} className="card-surface report-loading-card">
+              <Skeleton active title={{ width: '46%' }} paragraph={{ rows: 8 }} />
+            </Card>
+            <Card bordered={false} className="card-surface report-loading-card report-card-spacing">
+              <Skeleton active title={{ width: '34%' }} paragraph={{ rows: 6 }} />
+            </Card>
+          </Col>
+
+          <Col xs={24} xl={8}>
+            <Card bordered={false} className="card-surface report-loading-card">
+              <Skeleton active title={{ width: '52%' }} paragraph={{ rows: 6 }} />
+            </Card>
+            <Card bordered={false} className="card-surface report-loading-card report-card-spacing">
+              <Skeleton active title={{ width: '48%' }} paragraph={{ rows: 4 }} />
+            </Card>
+          </Col>
+        </Row>
       </div>
     )
   }
 
   if (error) {
     return (
-      <Result
-        status="error"
-        title="加载失败"
-        subTitle={error}
-        extra={
-          <Button onClick={() => navigate('/history')}>返回列表</Button>
-        }
+      <StatePanel
+        mode="error"
+        title={UI_COPY.report.loadError.title}
+        description={error}
+        variant="page"
+        action={<Button onClick={() => navigate('/history')}>{UI_COPY.report.actions.backToList}</Button>}
+        className="report-loading"
       />
     )
   }
 
   if (!analysis) {
     return (
-      <Result
-        status="info"
-        title="暂无数据"
-        extra={<Button onClick={() => navigate('/history')}>返回列表</Button>}
+      <StatePanel
+        mode="empty"
+        title={UI_COPY.report.empty.title}
+        description={UI_COPY.report.empty.description}
+        variant="page"
+        action={<Button onClick={() => navigate('/history')}>{UI_COPY.report.actions.backToList}</Button>}
+        className="report-loading"
       />
     )
   }
 
   if (analysis.status === 'failed') {
     return (
-      <Result
-        status="error"
-        title="分析失败"
-        subTitle={analysis.error_message}
-        extra={<Button onClick={() => navigate('/history')}>返回列表</Button>}
+      <StatePanel
+        mode="error"
+        title={UI_COPY.report.taskFailed.title}
+        description={analysis.error_message || UI_COPY.report.taskFailed.fallbackDescription}
+        variant="page"
+        action={<Button onClick={() => navigate('/history')}>{UI_COPY.report.actions.backToList}</Button>}
+        className="report-loading"
       />
     )
   }
@@ -209,7 +238,7 @@ const Report: React.FC = () => {
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/history')} type="text" />
           <div>
             <div className="report-title-row">
-              <Title level={4} className="page-title">分析报告 #{analysis.id}</Title>
+              <Title level={4} className="page-title">{UI_COPY.report.header.titlePrefix}{analysis.id}</Title>
               {excavation && getStatusTag(excavation.status)}
             </div>
             <Text type="secondary" className="report-subtitle">
@@ -219,7 +248,7 @@ const Report: React.FC = () => {
         </div>
         <Space className="page-actions">
           <Button icon={<DownloadOutlined />} onClick={() => downloadFile(originalUrl, `report_${analysis.id}`)}>
-            导出报告
+            {UI_COPY.report.actions.exportReport}
           </Button>
         </Space>
       </div>
@@ -248,7 +277,7 @@ const Report: React.FC = () => {
       <Row gutter={[24, 24]}>
         <Col xs={24} xl={16}>
           <Card
-            title="智能视觉分析"
+            title={UI_COPY.report.cards.visual}
             bordered={false}
             className="shadow-card card-surface"
           >
@@ -261,7 +290,13 @@ const Report: React.FC = () => {
                 className="report-compare-tabs"
               />
             ) : (
-              <Empty description="暂无图像数据" />
+              <StatePanel
+                mode="empty"
+                title={UI_COPY.report.imageEmpty.title}
+                description={UI_COPY.report.imageEmpty.description}
+                variant="card"
+                compact
+              />
             )}
           </Card>
 
@@ -298,10 +333,10 @@ const Report: React.FC = () => {
 
         <Col xs={24} xl={8}>
           {excavation && (
-            <Card title="超欠挖量化指标" bordered={false} className="card-surface report-sidebar-card">
+            <Card title={UI_COPY.report.cards.excavationMetrics} bordered={false} className="card-surface report-sidebar-card">
               <div className="report-stat-summary">
                 <Statistic
-                  title="开挖面积偏差"
+                  title={UI_COPY.report.stats.excavationDeviation}
                   value={excavation.difference_percent}
                   precision={2}
                   valueStyle={{ color: differencePercentColor }}
@@ -311,6 +346,15 @@ const Report: React.FC = () => {
                 <Text type="secondary">
                   实际 {excavation.actual_area_m2.toFixed(2)} m² / 设计 {excavation.design_area_m2.toFixed(2)} m²
                 </Text>
+              </div>
+
+              <div className="report-stat-bar-wrap" aria-hidden="true">
+                <div className="report-stat-bar-track">
+                  <div
+                    className="report-stat-bar-fill"
+                    style={{ width: `${Math.min(100, Math.abs(excavation.difference_percent) * 8)}%` }}
+                  />
+                </div>
               </div>
 
               <Descriptions column={1} size="small" bordered>
@@ -331,13 +375,13 @@ const Report: React.FC = () => {
           )}
 
           {analysis.metrics?.crack_count !== undefined && (
-            <Card title="裂缝病害统计" bordered={false} className="card-surface">
+            <Card title={UI_COPY.report.cards.crackMetrics} bordered={false} className="card-surface report-crack-card">
               <Row gutter={16} className="report-crack-stats">
                 <Col span={12}>
-                  <Statistic title="识别数量" value={analysis.metrics.crack_count} suffix="条" />
+                  <Statistic title={UI_COPY.report.stats.crackCount} value={analysis.metrics.crack_count} suffix="条" />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="最大长度" value={0.85} precision={2} suffix="m" />
+                  <Statistic title={UI_COPY.report.stats.crackMaxLength} value={0.85} precision={2} suffix="m" />
                 </Col>
               </Row>
               <Divider className="report-crack-divider" />
@@ -348,7 +392,7 @@ const Report: React.FC = () => {
             </Card>
           )}
 
-          <Card size="small" title="分析元数据" bordered={false} className="card-surface report-meta-card">
+          <Card size="small" title={UI_COPY.report.cards.metadata} bordered={false} className="card-surface report-meta-card">
             <Descriptions column={1} size="small">
               <Descriptions.Item label="任务ID">#{analysis.id}</Descriptions.Item>
               <Descriptions.Item label="处理时间">{processingSeconds === null ? '-' : `${processingSeconds} 秒`}</Descriptions.Item>

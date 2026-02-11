@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { Row, Col, Card, Table, Progress, Tag, Button, Space, Tooltip, Divider, Typography, Spin, Empty } from 'antd'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { Row, Col, Card, Table, Progress, Tag, Button, Space, Tooltip, Divider, Typography } from 'antd'
 import { ReloadOutlined, SyncOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { analysisApi, AnalysisListItem, getWebSocketUrl, systemApi, SystemStatusResponse } from '@/api/client'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -287,6 +289,29 @@ const RealTimeData: React.FC = () => {
   const totalActive = activeAnalyses.length
   const refreshStatusText = isAutoRefreshEnabled ? '自动刷新：已开启' : '自动刷新：已暂停'
 
+  const orderedActiveAnalyses = useMemo(() => {
+    const statusWeight: Record<string, number> = {
+      processing: 0,
+      pending: 1,
+      completed: 2,
+      failed: 3,
+    }
+
+    return [...activeAnalyses].sort((left, right) => {
+      const statusDelta = (statusWeight[left.status] ?? 9) - (statusWeight[right.status] ?? 9)
+      if (statusDelta !== 0) return statusDelta
+      return dayjs(right.created_at).valueOf() - dayjs(left.created_at).valueOf()
+    })
+  }, [activeAnalyses])
+
+  const processingQueue = orderedActiveAnalyses.filter((analysis) => analysis.status === 'processing')
+  const pendingQueue = orderedActiveAnalyses.filter((analysis) => analysis.status === 'pending')
+
+  const groupedActiveAnalyses: Array<ActiveAnalysis & { groupKey: string }> = [
+    ...processingQueue.map((analysis) => ({ ...analysis, groupKey: 'processing' })),
+    ...pendingQueue.map((analysis) => ({ ...analysis, groupKey: 'pending' })),
+  ]
+
   const columns: ColumnsType<ActiveAnalysis> = [
     {
       title: '序列 ID',
@@ -355,33 +380,39 @@ const RealTimeData: React.FC = () => {
 
   return (
     <div className="realtime-page">
-      <div className="realtime-toolbar">
-        <span className={`realtime-toolbar-item ${isAutoRefreshEnabled ? 'is-active' : ''}`}>{refreshStatusText}</span>
-        <span className="realtime-toolbar-item">WebSocket连接：{wsConnectionsRef.current.size}</span>
-        {taskFetchError && <span className="realtime-toolbar-item is-warning">{taskFetchError}</span>}
-        {systemFetchError && <span className="realtime-toolbar-item is-warning">{systemFetchError}</span>}
-      </div>
-
       <div className="page-header">
-        <Title level={4} className="page-title">实时数据</Title>
-        <Space className="page-actions">
-          <span className="realtime-last-refresh">
-            最后刷新: {lastRefreshTime ? dayjs(lastRefreshTime).format('HH:mm:ss') : '-'}
-          </span>
-          <Button
-            icon={<ReloadOutlined spin={isLoadingList || isLoadingSystem} />}
-            onClick={handleManualRefresh}
-            disabled={isLoadingList || isLoadingSystem}
-          >
-            刷新
-          </Button>
-          <Button
-            type={isAutoRefreshEnabled ? 'default' : 'primary'}
-            onClick={toggleAutoRefresh}
-          >
-            {isAutoRefreshEnabled ? '暂停自动刷新' : '恢复自动刷新'}
-          </Button>
-        </Space>
+        <div className="realtime-header-main">
+          <Title level={4} className="page-title">实时数据</Title>
+          <p className="realtime-header-desc">查看任务队列、WebSocket连接状态与模型资源占用情况。</p>
+        </div>
+
+        <div className="realtime-header-side">
+          <div className="realtime-toolbar">
+            <span className={`realtime-toolbar-item ${isAutoRefreshEnabled ? 'is-active' : ''}`}>{refreshStatusText}</span>
+            <span className="realtime-toolbar-item">WebSocket连接：{wsConnectionsRef.current.size}</span>
+            {taskFetchError && <span className="realtime-toolbar-item is-warning">{taskFetchError}</span>}
+            {systemFetchError && <span className="realtime-toolbar-item is-warning">{systemFetchError}</span>}
+          </div>
+
+          <Space className="page-actions realtime-page-actions">
+            <span className="realtime-last-refresh">
+              最后刷新: {lastRefreshTime ? dayjs(lastRefreshTime).format('HH:mm:ss') : '-'}
+            </span>
+            <Button
+              icon={<ReloadOutlined spin={isLoadingList || isLoadingSystem} />}
+              onClick={handleManualRefresh}
+              disabled={isLoadingList || isLoadingSystem}
+            >
+              刷新
+            </Button>
+            <Button
+              type={isAutoRefreshEnabled ? 'default' : 'primary'}
+              onClick={toggleAutoRefresh}
+            >
+              {isAutoRefreshEnabled ? '暂停自动刷新' : '恢复自动刷新'}
+            </Button>
+          </Space>
+        </div>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -427,24 +458,44 @@ const RealTimeData: React.FC = () => {
               <span className="status-badge neutral realtime-card-badge">每 5 秒自动刷新</span>
             </div>
             {isLoadingList && activeAnalyses.length === 0 ? (
-              <div className="realtime-empty-state">
-                <Spin />
-              </div>
-            ) : activeAnalyses.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="当前没有活跃的分析任务"
+              <StatePanel
+                mode="loading"
+                title={UI_COPY.realtime.taskLoading.title}
+                description={UI_COPY.realtime.taskLoading.description}
+                variant="card"
+                className="realtime-empty-state"
+              />
+            ) : groupedActiveAnalyses.length === 0 ? (
+              <StatePanel
+                mode="empty"
+                title={UI_COPY.realtime.taskEmpty.title}
+                description={UI_COPY.realtime.taskEmpty.description}
+                variant="card"
                 className="realtime-empty"
               />
             ) : (
               <Table<ActiveAnalysis>
                 rowKey="id"
-                dataSource={activeAnalyses}
+                dataSource={groupedActiveAnalyses}
+                className="realtime-task-table"
                 columns={columns}
                 pagination={false}
                 size="middle"
+                sticky
                 scroll={{ x: 760 }}
+                rowClassName={(record, index) => {
+                  const prev = index != null && index > 0 ? groupedActiveAnalyses[index - 1] : null
+                  const shouldSplit = !!prev && prev.groupKey !== (record as ActiveAnalysis & { groupKey: string }).groupKey
+                  return shouldSplit ? 'realtime-row-group-split' : ''
+                }}
               />
+            )}
+
+            {groupedActiveAnalyses.length > 0 && (
+              <div className="realtime-group-legend">
+                <span className="realtime-group-pill realtime-group-pill--processing">分析中：{processingQueue.length}</span>
+                <span className="realtime-group-pill realtime-group-pill--pending">等待中：{pendingQueue.length}</span>
+              </div>
             )}
           </Card>
         </Col>
@@ -466,9 +517,14 @@ const RealTimeData: React.FC = () => {
             </div>
             <div className="realtime-system-body">
               {isLoadingSystem && !systemStatus ? (
-                <div className="realtime-empty-state realtime-empty-state--short">
-                  <Spin />
-                </div>
+                <StatePanel
+                  mode="loading"
+                  title={UI_COPY.realtime.systemLoading.title}
+                  description={UI_COPY.realtime.systemLoading.description}
+                  variant="card"
+                  compact
+                  className="realtime-empty-state realtime-empty-state--short"
+                />
               ) : systemStatus ? (
                 <>
                   {systemStatus.models.map((model, index) => {
@@ -574,7 +630,13 @@ const RealTimeData: React.FC = () => {
                   )}
                 </>
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无法获取系统状态" />
+                <StatePanel
+                  mode="error"
+                  title={UI_COPY.realtime.systemError.title}
+                  description={UI_COPY.realtime.systemError.description}
+                  variant="card"
+                  compact
+                />
               )}
             </div>
           </Card>

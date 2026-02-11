@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Row, Col, Card, Spin, Table, Button, Empty, Space } from 'antd'
+import { Row, Col, Card, Table, Button, Skeleton } from 'antd'
 import {
   ArrowUpOutlined,
   HistoryOutlined,
@@ -8,6 +8,7 @@ import {
   ReloadOutlined,
   PictureOutlined,
   LineChartOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -26,6 +27,8 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2'
 import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { analysisApi, AnalysisListItem, TrendResponse, DeviationDistribution } from '@/api/client'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 ChartJS.register(
   CategoryScale,
@@ -50,6 +53,7 @@ const Dashboard: React.FC = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
+  const [trendRange, setTrendRange] = useState<number>(20)
 
   const overSeriesColor = '#2f6fae'
   const underSeriesColor = '#c9751d'
@@ -89,7 +93,7 @@ const Dashboard: React.FC = () => {
       setIsLoadingTrend(true)
       try {
         const [trendRes, distRes] = await Promise.all([
-          analysisApi.getTrend(20),
+          analysisApi.getTrend(trendRange),
           analysisApi.getDistribution(),
         ])
         if (!ignore) {
@@ -108,7 +112,7 @@ const Dashboard: React.FC = () => {
     return () => {
       ignore = true
     }
-  }, [refreshKey])
+  }, [refreshKey, trendRange])
 
   useEffect(() => {
     let ignore = false
@@ -206,6 +210,10 @@ const Dashboard: React.FC = () => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 520,
+      easing: 'easeOutQuart' as const,
+    },
     interaction: {
       mode: 'index' as const,
       intersect: false,
@@ -213,13 +221,23 @@ const Dashboard: React.FC = () => {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#243445',
+        backgroundColor: 'rgba(20, 31, 45, 0.94)',
+        borderColor: 'rgba(160, 183, 209, 0.26)',
+        borderWidth: 1,
+        displayColors: true,
+        boxPadding: 4,
+        usePointStyle: true,
+        titleSpacing: 6,
+        bodySpacing: 4,
         padding: 12,
-        cornerRadius: 8,
+        cornerRadius: 10,
         titleFont: { size: 13, family: "'Inter', sans-serif" },
         bodyFont: { size: 12, family: "'Inter', sans-serif" },
+        bodyColor: '#d7e7fa',
+        titleColor: '#f8fbff',
         callbacks: {
           title: (items: any[]) => `样本序列: ${items[0].label}`,
+          label: (ctx: any) => ` ${ctx.dataset.label}: ${Number(ctx.raw || 0).toFixed(2)} m²`,
         },
       },
     },
@@ -250,17 +268,46 @@ const Dashboard: React.FC = () => {
 
   if (!stats && isLoadingStats) {
     return (
-      <div className="dashboard-loading-wrap">
-        <Spin size="large" />
+      <div className="dashboard-page dashboard-loading-shell">
+        <div className="dashboard-loading-hero card-surface">
+          <Skeleton active title={{ width: '36%' }} paragraph={{ rows: 3 }} />
+        </div>
+
+        <Row gutter={[16, 16]}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Col xs={24} sm={12} lg={6} key={`dashboard-skeleton-kpi-${index}`}>
+              <Card bordered={false} className="kpi-card dashboard-loading-card">
+                <Skeleton active title={{ width: '52%' }} paragraph={{ rows: 2 }} />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={16}>
+            <Card bordered={false} className="kpi-card dashboard-loading-chart">
+              <Skeleton active title={{ width: '42%' }} paragraph={{ rows: 6 }} />
+            </Card>
+          </Col>
+          <Col xs={24} lg={8}>
+            <Card bordered={false} className="kpi-card dashboard-loading-chart">
+              <Skeleton active title={{ width: '50%' }} paragraph={{ rows: 6 }} />
+            </Card>
+          </Col>
+        </Row>
       </div>
     )
   }
 
   if (!stats) {
     return (
-      <div className="dashboard-loading-wrap">
-        <Empty description="暂无仪表盘数据" />
-      </div>
+      <StatePanel
+        mode="empty"
+        title={UI_COPY.dashboard.emptyDashboard.title}
+        description={UI_COPY.dashboard.emptyDashboard.description}
+        variant="page"
+        className="dashboard-loading-wrap"
+      />
     )
   }
 
@@ -268,6 +315,18 @@ const Dashboard: React.FC = () => {
   const normalPercent = total > 0 ? (stats.normal_count / total) * 100 : 0
   const normalPercentSafe = Math.max(0, Math.min(100, normalPercent))
   const abnormalCount = stats.over_excavation_count + stats.under_excavation_count
+  const abnormalRatePercent = total > 0 ? (abnormalCount / total) * 100 : 0
+  const avgDeviationPercent = Math.min(100, Math.abs(stats.avg_difference_percent) * 10)
+  const todaySharePercent =
+    stats.today_analyses > 0
+      ? Math.min(
+          100,
+          Math.max(
+            8,
+            (stats.today_analyses / Math.max(stats.today_analyses + (stats.yesterday_analyses ?? 0), 1)) * 100,
+          ),
+        )
+      : 0
   const trendSummaryText =
     trendData && trendData.labels.length > 0
       ? `显示最近 ${trendData.labels.length} 次分析结果`
@@ -377,8 +436,21 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-toolbar">
-        <div className="dashboard-toolbar-left">
+      <div className="dashboard-hero kpi-card">
+        <div className="dashboard-hero-main">
+          <div className="dashboard-hero-kicker">TunnelAI Command Center</div>
+          <h2 className="dashboard-hero-title">工程智能概览</h2>
+          <p className="dashboard-hero-desc">
+            统一查看当前施工段分析质量、异常分布与任务状态，快速进入重点作业页面。
+          </p>
+          <div className="dashboard-hero-meta">
+            <span className="dashboard-hero-chip">总样本：{total}</span>
+            <span className="dashboard-hero-chip">合格率：{normalPercent.toFixed(1)}%</span>
+            <span className="dashboard-hero-chip">异常样本：{abnormalCount}</span>
+          </div>
+        </div>
+
+        <div className="dashboard-hero-side">
           <div className="dashboard-toolbar-title">快捷入口</div>
           <div className="dashboard-toolbar-actions">
             {quickLinks.map((item) => (
@@ -394,26 +466,32 @@ const Dashboard: React.FC = () => {
               </Button>
             ))}
           </div>
+
+          <div className="dashboard-hero-refresh">
+            <span className="dashboard-toolbar-time">
+              更新时间：{lastUpdatedAt ? dayjs(lastUpdatedAt).format('HH:mm:ss') : '--:--:--'}
+            </span>
+            <Button
+              size="small"
+              icon={<ReloadOutlined spin={isAnyLoading} />}
+              onClick={handleRefresh}
+              disabled={isAnyLoading}
+            >
+              刷新数据
+            </Button>
+          </div>
         </div>
-        <Space size={8} className="dashboard-toolbar-meta">
-          <span className="dashboard-toolbar-time">
-            更新时间：{lastUpdatedAt ? dayjs(lastUpdatedAt).format('HH:mm:ss') : '--:--:--'}
-          </span>
-          <Button
-            size="small"
-            icon={<ReloadOutlined spin={isAnyLoading} />}
-            onClick={handleRefresh}
-            disabled={isAnyLoading}
-          >
-            刷新数据
-          </Button>
-        </Space>
       </div>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card">
-            <div className="dashboard-kpi-label">今日分析样本</div>
+          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--primary">
+            <div className="dashboard-kpi-head">
+              <div className="dashboard-kpi-label">今日分析样本</div>
+              <span className="dashboard-kpi-icon dashboard-kpi-icon--primary">
+                <HistoryOutlined />
+              </span>
+            </div>
             <div className="dashboard-kpi-value-row">
               <span className="dashboard-kpi-value">{stats.today_analyses}</span>
               <span className="dashboard-kpi-unit">个</span>
@@ -433,30 +511,43 @@ const Dashboard: React.FC = () => {
                 <span className="dashboard-muted-text">昨日: {stats.yesterday_analyses ?? 0} 个</span>
               )}
             </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--alert">
-            <div className="dashboard-kpi-top-row">
-              <div>
-                <div className="dashboard-kpi-label">超欠挖异常</div>
-                <div className="dashboard-kpi-value-row">
-                  <span className="dashboard-kpi-value">{abnormalCount}</span>
-                  <span className="dashboard-kpi-unit">次</span>
-                </div>
-              </div>
-              <div className="dashboard-alert-icon-wrap">
-                <ThunderboltOutlined className="dashboard-alert-icon" />
+            <div className="dashboard-kpi-spark">
+              <div className="dashboard-kpi-spark-track">
+                <div className="dashboard-kpi-spark-fill" style={{ width: `${todaySharePercent}%` }} />
               </div>
             </div>
-            <div className="dashboard-alert-text">需重点关注</div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card">
-            <div className="dashboard-kpi-label">平均开挖偏差</div>
+          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--alert dashboard-kpi-card--danger">
+            <div className="dashboard-kpi-head">
+              <div className="dashboard-kpi-label">超欠挖异常</div>
+              <span className="dashboard-kpi-icon dashboard-kpi-icon--danger">
+                <ThunderboltOutlined />
+              </span>
+            </div>
+            <div className="dashboard-kpi-value-row">
+              <span className="dashboard-kpi-value">{abnormalCount}</span>
+              <span className="dashboard-kpi-unit">次</span>
+            </div>
+            <div className="dashboard-alert-text">需重点关注</div>
+            <div className="dashboard-kpi-spark">
+              <div className="dashboard-kpi-spark-track">
+                <div className="dashboard-kpi-spark-fill dashboard-kpi-spark-fill--danger" style={{ width: `${abnormalRatePercent}%` }} />
+              </div>
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--accent">
+            <div className="dashboard-kpi-head">
+              <div className="dashboard-kpi-label">平均开挖偏差</div>
+              <span className="dashboard-kpi-icon dashboard-kpi-icon--accent">
+                <LineChartOutlined />
+              </span>
+            </div>
             <div className="dashboard-kpi-value-row">
               <span className="dashboard-kpi-value">{Math.abs(stats.avg_difference_percent).toFixed(1)}</span>
               <span className="dashboard-kpi-unit">%</span>
@@ -470,18 +561,31 @@ const Dashboard: React.FC = () => {
                 <span className="dashboard-kpi-trend is-normal">偏差正常</span>
               )}
             </div>
+            <div className="dashboard-kpi-spark">
+              <div className="dashboard-kpi-spark-track">
+                <div className="dashboard-kpi-spark-fill dashboard-kpi-spark-fill--accent" style={{ width: `${avgDeviationPercent}%` }} />
+              </div>
+            </div>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card">
-            <div className="dashboard-kpi-label">系统合格率</div>
+          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--success">
+            <div className="dashboard-kpi-head">
+              <div className="dashboard-kpi-label">系统合格率</div>
+              <span className="dashboard-kpi-icon dashboard-kpi-icon--success">
+                <CheckCircleOutlined />
+              </span>
+            </div>
             <div className="dashboard-kpi-value-row">
               <span className="dashboard-kpi-value">{normalPercent.toFixed(1)}</span>
               <span className="dashboard-kpi-unit">%</span>
             </div>
             <div className="dashboard-progress-track">
               <div className="dashboard-progress-bar" style={{ width: `${normalPercentSafe}%` }} />
+            </div>
+            <div className="dashboard-kpi-foot">
+              <span className="dashboard-kpi-trend is-normal">质量稳定</span>
             </div>
           </Card>
         </Col>
@@ -495,26 +599,51 @@ const Dashboard: React.FC = () => {
                 <h3 className="dashboard-card-title">超欠挖变化 (按分析序列)</h3>
                 <p className="dashboard-card-subtitle">{trendSummaryText}</p>
               </div>
-              <div className="dashboard-chart-legend">
-                <span className="dashboard-legend-item">
-                  <span className="dashboard-legend-dot is-over" />
-                  超挖面积
-                </span>
-                <span className="dashboard-legend-item">
-                  <span className="dashboard-legend-dot is-under" />
-                  欠挖面积
-                </span>
+              <div className="dashboard-chart-tools">
+                <div className="dashboard-chart-legend">
+                  <span className="dashboard-legend-item">
+                    <span className="dashboard-legend-dot is-over" />
+                    超挖面积
+                  </span>
+                  <span className="dashboard-legend-item">
+                    <span className="dashboard-legend-dot is-under" />
+                    欠挖面积
+                  </span>
+                </div>
+
+                <div className="dashboard-chart-range" role="tablist" aria-label="趋势区间切换">
+                  {[7, 20, 30].map((range) => (
+                    <button
+                      key={range}
+                      type="button"
+                      className={`dashboard-chart-range-btn ${trendRange === range ? 'is-active' : ''}`}
+                      onClick={() => setTrendRange(range)}
+                    >
+                      {range} 次
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="chart-container">
               {isLoadingTrend ? (
-                <div className="dashboard-chart-loading">
-                  <Spin />
-                </div>
+                <StatePanel
+                  mode="loading"
+                  title={UI_COPY.dashboard.trendLoading.title}
+                  variant="card"
+                  compact
+                  className="dashboard-chart-loading"
+                />
               ) : trendData && trendData.labels.length > 0 ? (
                 <Line data={chartData} options={chartOptions} />
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无趋势数据，请先上传分析图像" />
+                <StatePanel
+                  mode="empty"
+                  title={UI_COPY.dashboard.trendEmpty.title}
+                  description={UI_COPY.dashboard.trendEmpty.description}
+                  variant="card"
+                  compact
+                />
               )}
             </div>
           </Card>
@@ -531,9 +660,13 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="dashboard-distribution-body">
               {isLoadingTrend ? (
-                <div className="dashboard-distribution-loading">
-                  <Spin size="small" />
-                </div>
+                <StatePanel
+                  mode="loading"
+                  title={UI_COPY.dashboard.distributionLoading.title}
+                  variant="card"
+                  compact
+                  className="dashboard-distribution-loading"
+                />
               ) : distribution && distributionChartData ? (
                 <div className="dashboard-distribution-content">
                   <div className="dashboard-donut-wrap">
@@ -541,9 +674,20 @@ const Dashboard: React.FC = () => {
                       data={distributionChartData}
                       options={{
                         cutout: '70%',
+                        animation: {
+                          duration: 520,
+                          easing: 'easeOutQuart',
+                        },
                         plugins: {
                           legend: { display: false },
                           tooltip: {
+                            backgroundColor: 'rgba(20, 31, 45, 0.94)',
+                            borderColor: 'rgba(160, 183, 209, 0.26)',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 10,
+                            bodyColor: '#d7e7fa',
+                            titleColor: '#f8fbff',
                             callbacks: {
                               label: (ctx) => ` ${ctx.label}: ${ctx.raw} 次`,
                             },
@@ -577,7 +721,13 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无统计数据" />
+                <StatePanel
+                  mode="empty"
+                  title={UI_COPY.dashboard.distributionEmpty.title}
+                  description={UI_COPY.dashboard.distributionEmpty.description}
+                  variant="card"
+                  compact
+                />
               )}
 
               <div className="dashboard-model-wrap">
@@ -607,11 +757,21 @@ const Dashboard: React.FC = () => {
         <Table<AnalysisListItem>
           rowKey="id"
           dataSource={recent}
+          className="dashboard-latest-table"
           pagination={false}
           loading={isLoadingRecent}
+          sticky
           scroll={{ x: 860 }}
           locale={{
-            emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无分析记录" />,
+            emptyText: (
+              <StatePanel
+                mode="empty"
+                title={UI_COPY.dashboard.latestEmpty.title}
+                description={UI_COPY.dashboard.latestEmpty.description}
+                variant="table"
+                compact
+              />
+            ),
           }}
           onRow={(record) => ({
             onClick: () => {

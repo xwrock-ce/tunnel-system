@@ -32,7 +32,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="settings-page">
       <div className="page-header">
         <Title level={4} className="page-title">
           系统设置

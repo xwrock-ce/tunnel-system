@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Card, Button, Form, InputNumber, Progress, Result, Row, Col,
+  Card, Button, Form, InputNumber, Progress, Row, Col,
   Typography, Image, Tag, Descriptions, Divider, message, Space, Tabs
 } from 'antd'
 import { ReloadOutlined, FileSearchOutlined, HistoryOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
@@ -9,6 +9,8 @@ import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
+import StatePanel from '@/components/feedback/StatePanel'
+import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title, Text } = Typography
 
@@ -149,7 +151,7 @@ const Upload_Page: React.FC = () => {
     <div className="upload-page">
       <div className="page-header">
         <Title level={4} className="page-title">
-          上传分析
+          {UI_COPY.upload.shared.pageTitle}
         </Title>
       </div>
 
@@ -161,12 +163,12 @@ const Upload_Page: React.FC = () => {
         items={[
           {
             key: 'single',
-            label: '单张分析',
+            label: UI_COPY.upload.shared.tabs.single,
             children: currentAnalysis ? (
               <Card
                 title={
                   <Space>
-                    <span>分析结果</span>
+                    <span>{UI_COPY.upload.shared.resultCardTitle}</span>
                     {currentAnalysis.excavation && getStatusTag(currentAnalysis.excavation.status)}
                   </Space>
                 }
@@ -177,10 +179,10 @@ const Upload_Page: React.FC = () => {
                       onClick={() => navigate(`/report/${currentAnalysis.id}`)}
                       disabled={currentAnalysis.status !== 'completed'}
                     >
-                      查看报告
+                      {UI_COPY.upload.shared.detailButtons.viewReport}
                     </Button>
                     <Button icon={<ReloadOutlined />} onClick={handleResetSingle}>
-                      新分析
+                      {UI_COPY.upload.shared.detailButtons.restart}
                     </Button>
                   </Space>
                 }
@@ -192,7 +194,7 @@ const Upload_Page: React.FC = () => {
               <Row gutter={24}>
                 <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>原始图片</Text>
+                          <Text strong>{UI_COPY.upload.shared.preview.original}</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
@@ -201,14 +203,14 @@ const Upload_Page: React.FC = () => {
                       </Col>
                       <Col xs={24} md={12}>
                         <div className="upload-preview-title">
-                          <Text strong>分割视图</Text>
+                          <Text strong>{UI_COPY.upload.shared.preview.segmented}</Text>
                         </div>
                         <Tabs
                           size="small"
                           items={[
                             {
                               key: 'combined',
-                              label: '综合叠加',
+                              label: UI_COPY.upload.shared.preview.combined,
                               children: (
                                 <Image
                                   src={analysisApi.getImageUrl(
@@ -221,7 +223,7 @@ const Upload_Page: React.FC = () => {
                             },
                             {
                               key: 'face',
-                              label: '掌子面',
+                              label: UI_COPY.upload.shared.preview.face,
                               children: (
                                 <Image
                                   src={analysisApi.getImageUrl(currentAnalysis.id, 'overlay')}
@@ -233,7 +235,7 @@ const Upload_Page: React.FC = () => {
                               ? [
                                 {
                                   key: 'crack',
-                                  label: '裂缝',
+                                  label: UI_COPY.upload.shared.preview.crack,
                                   children: (
                                     <Image
                                       src={analysisApi.getImageUrl(currentAnalysis.id, 'crack_overlay')}
@@ -250,7 +252,7 @@ const Upload_Page: React.FC = () => {
 
                     <Divider />
 
-                    <Descriptions title="超欠挖分析" bordered column={{ xs: 1, sm: 2, md: 3 }}>
+                    <Descriptions title={UI_COPY.upload.shared.analysisSummaryTitle} bordered column={{ xs: 1, sm: 2, md: 3 }}>
                       <Descriptions.Item label="像素数量">
                         {currentAnalysis.excavation.pixel_count.toLocaleString()}
                       </Descriptions.Item>
@@ -291,24 +293,31 @@ const Upload_Page: React.FC = () => {
                     </Descriptions>
                   </>
                 ) : currentAnalysis.status === 'failed' ? (
-                  <Result
-                    status="error"
-                    title="分析失败"
-                    subTitle={currentAnalysis.error_message}
-                    extra={
+                  <StatePanel
+                    mode="error"
+                    title={UI_COPY.upload.taskFailed.title}
+                    description={currentAnalysis.error_message || UI_COPY.upload.taskFailed.fallbackDescription}
+                    variant="card"
+                    action={
                       <Button type="primary" onClick={handleResetSingle}>
-                        重新分析
+                        {UI_COPY.upload.taskFailed.actionText}
                       </Button>
                     }
                   />
                 ) : (
-                  <Result status="info" title="处理中" subTitle="请稍候…" />
+                  <StatePanel
+                    mode="info"
+                    title={UI_COPY.upload.taskProcessing.title}
+                    description={UI_COPY.upload.taskProcessing.description}
+                    variant="card"
+                    compact
+                  />
                 )}
               </Card>
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片" bordered={false} className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.shared.cards.singleImage} bordered={false} className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzing}
@@ -349,10 +358,10 @@ const Upload_Page: React.FC = () => {
 
                 <Col xs={24} lg={8}>
                   <Card
-                    title="分析参数"
+                    title={UI_COPY.upload.shared.cards.config}
                     bordered={false}
                     className="card-surface upload-config-card"
-                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                   >
                     <Form
                       form={form}
@@ -362,11 +371,11 @@ const Upload_Page: React.FC = () => {
                         scale: analysisDefaults.scale,
                       }}
                     >
-                      <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
+                      <Form.Item name="design_area" label={UI_COPY.upload.shared.fields.designAreaLabel} tooltip={UI_COPY.upload.shared.fields.designAreaTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzing} />
                       </Form.Item>
 
-                      <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
+                      <Form.Item name="scale" label={UI_COPY.upload.shared.fields.scaleLabel} tooltip={UI_COPY.upload.shared.fields.scaleTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzing} />
                       </Form.Item>
 
@@ -378,7 +387,7 @@ const Upload_Page: React.FC = () => {
                           block
                           size="large"
                         >
-                          {isAnalyzing ? '分析中…' : '开始分析'}
+                          {isAnalyzing ? UI_COPY.upload.shared.buttons.analyzing : UI_COPY.upload.shared.buttons.startSingle}
                         </Button>
                       </Form.Item>
                     </Form>
@@ -389,19 +398,20 @@ const Upload_Page: React.FC = () => {
           },
           {
             key: 'batch',
-            label: '批量分析',
+            label: UI_COPY.upload.shared.tabs.batch,
             children: batchTaskIds ? (
               <Card bordered={false} className="card-surface">
-                <Result
-                  status="success"
-                  title="批量任务已启动"
-                  subTitle={`已提交 ${batchTaskIds.length} 张图片，任务将在后台依次处理。`}
-                  extra={
+                <StatePanel
+                  mode="info"
+                  title={UI_COPY.upload.batchStarted.title}
+                  description={UI_COPY.upload.batchStarted.description(batchTaskIds.length)}
+                  variant="card"
+                  action={
                     <Space>
                       <Button icon={<HistoryOutlined />} type="primary" onClick={() => navigate('/history')}>
-                        去历史记录查看
+                        {UI_COPY.upload.batchStarted.actions.viewHistory}
                       </Button>
-                      <Button onClick={handleResetBatch}>继续批量上传</Button>
+                      <Button onClick={handleResetBatch}>{UI_COPY.upload.batchStarted.actions.continueUpload}</Button>
                     </Space>
                   }
                 />
@@ -409,7 +419,7 @@ const Upload_Page: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title="选择图片（最多 50 张）" bordered={false} className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.shared.cards.batchImages} bordered={false} className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -421,7 +431,7 @@ const Upload_Page: React.FC = () => {
                     {batchFiles.length > 0 && (
                       <div className="upload-preview-panel">
                         <div className="upload-file-row-head">
-                          <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
+                          <Text type="secondary">{UI_COPY.upload.shared.selectedFilesText(batchFiles.length)}</Text>
                           <Button
                             type="link"
                             size="small"
@@ -429,7 +439,7 @@ const Upload_Page: React.FC = () => {
                             onClick={handleResetBatch}
                             disabled={isAnalyzing}
                           >
-                            清空
+                            {UI_COPY.upload.shared.buttons.clear}
                           </Button>
                         </div>
                         <div className="upload-file-list">
@@ -464,10 +474,10 @@ const Upload_Page: React.FC = () => {
                 </Col>
                 <Col xs={24} lg={8}>
                   <Card
-                    title="分析参数"
+                    title={UI_COPY.upload.shared.cards.config}
                     bordered={false}
                     className="card-surface upload-config-card"
-                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                   >
                     <Form
                       form={form}
@@ -477,11 +487,11 @@ const Upload_Page: React.FC = () => {
                         scale: analysisDefaults.scale,
                       }}
                     >
-                      <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
+                      <Form.Item name="design_area" label={UI_COPY.upload.shared.fields.designAreaLabel} tooltip={UI_COPY.upload.shared.fields.designAreaTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzing} />
                       </Form.Item>
 
-                      <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
+                      <Form.Item name="scale" label={UI_COPY.upload.shared.fields.scaleLabel} tooltip={UI_COPY.upload.shared.fields.scaleTooltip}>
                         <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzing} />
                       </Form.Item>
 
@@ -493,12 +503,12 @@ const Upload_Page: React.FC = () => {
                           block
                           size="large"
                         >
-                          {isAnalyzing ? '提交中…' : '开始批量分析'}
+                          {isAnalyzing ? UI_COPY.upload.shared.buttons.submitting : UI_COPY.upload.shared.buttons.startBatch}
                         </Button>
                       </Form.Item>
                       <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
-                          查看历史记录
+                          {UI_COPY.upload.shared.buttons.viewHistory}
                         </Button>
                       </Form.Item>
                     </Form>

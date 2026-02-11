@@ -169,23 +169,23 @@ const MainLayout: React.FC = () => {
     }
   }
 
+  const routeNameMap: Record<string, string> = {
+    dashboard: '仪表盘',
+    upload: '上传分析',
+    face: '掌子面',
+    crack: '裂缝',
+    history: '历史记录',
+    settings: '设置',
+    report: '分析报告',
+    realtime: '实时数据',
+  }
+
   // Generate breadcrumbs based on path
   const getBreadcrumbs = () => {
     const pathSnippets = location.pathname.split('/').filter(i => i)
     const extraBreadcrumbItems = pathSnippets.map((_) => {
-      // Simple mapping
-      const nameMap: Record<string, string> = {
-        'dashboard': '仪表盘',
-        'upload': '上传分析',
-        'face': '掌子面',
-        'crack': '裂缝',
-        'history': '历史记录',
-        'settings': '设置',
-        'report': '分析报告',
-        'realtime': '实时数据'
-      }
       return {
-        title: nameMap[_] || _
+        title: routeNameMap[_] || _,
       }
     })
     return [
@@ -193,6 +193,9 @@ const MainLayout: React.FC = () => {
       ...extraBreadcrumbItems,
     ]
   }
+
+  const breadcrumbs = getBreadcrumbs()
+  const currentPageTitle = String(breadcrumbs[breadcrumbs.length - 1]?.title || '首页')
 
   return (
     <Layout className="app-layout">
@@ -247,59 +250,64 @@ const MainLayout: React.FC = () => {
       
       <Layout>
         <Header className="app-header">
-          <div className="header-left">
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              className="sidebar-toggle-btn"
-            />
-            <Breadcrumb items={getBreadcrumbs()} />
-          </div>
+          <div className="header-shell">
+            <div className="header-left">
+              <Button
+                type="text"
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => setCollapsed(!collapsed)}
+                className="sidebar-toggle-btn"
+              />
+              <div className="header-title-wrap">
+                <Breadcrumb items={breadcrumbs} />
+                <span className="header-page-title">{currentPageTitle}</span>
+              </div>
+            </div>
 
-          <div className="header-right">
-             <Popover content={projectContent} title="项目详情" trigger="hover" placement="bottomRight">
-               <button type="button" className="project-selector-btn" aria-label="查看当前项目详情">
-                  <span className="project-selector-main">
-                    <ProjectOutlined className="project-selector-icon" />
-                    <span className="project-selector-text">
-                      {currentProject.name}
-                      <span className="project-selector-section">| {sectionShortName}</span>
+            <div className="header-right">
+               <Popover content={projectContent} title="项目详情" trigger="hover" placement="bottomRight">
+                 <button type="button" className="project-selector-btn" aria-label="查看当前项目详情">
+                    <span className="project-selector-main">
+                      <ProjectOutlined className="project-selector-icon" />
+                      <span className="project-selector-text">
+                        {currentProject.name}
+                        <span className="project-selector-section">| {sectionShortName}</span>
+                      </span>
                     </span>
-                  </span>
-                  <DownOutlined className="project-selector-caret" />
-               </button>
-             </Popover>
+                    <DownOutlined className="project-selector-caret" />
+                 </button>
+               </Popover>
 
-             <div className="header-divider"></div>
+               <div className="header-divider"></div>
 
-             <div className="header-actions">
-                <Tooltip title="输入分析 ID (如: 10) 或关键词按回车搜索" placement="bottom">
-                  <Input.Search 
-                     placeholder="全局搜索分析记录..." 
-                     allowClear
-                     onSearch={handleSearch}
-                     bordered={false}
-                     className="header-search-input header-search-input--wide"
-                     enterButton={false}
-                  />
-                </Tooltip>
-                
-                <Tooltip title="帮助与支持">
-                  <Button 
-                    type="text" 
-                    icon={<QuestionCircleOutlined />} 
-                    className="action-btn"
-                    onClick={() => setIsHelpModalOpen(true)}
-                  />
-                </Tooltip>
-                
-                <Popover content={notificationContent} title="系统通知" trigger="click" placement="bottomRight">
-                  <Badge count={notificationErrorCount} dot offset={[-4, 4]}>
-                    <Button type="text" icon={<BellOutlined />} className="action-btn" />
-                  </Badge>
-                </Popover>
-             </div>
+               <div className="header-actions">
+                  <Tooltip title="输入分析 ID (如: 10) 或关键词按回车搜索" placement="bottom">
+                    <Input.Search
+                       placeholder="全局搜索分析记录..."
+                       allowClear
+                       onSearch={handleSearch}
+                       bordered={false}
+                       className="header-search-input header-search-input--wide"
+                       enterButton={false}
+                    />
+                  </Tooltip>
+
+                  <Tooltip title="帮助与支持">
+                    <Button
+                      type="text"
+                      icon={<QuestionCircleOutlined />}
+                      className="action-btn"
+                      onClick={() => setIsHelpModalOpen(true)}
+                    />
+                  </Tooltip>
+
+                  <Popover content={notificationContent} title="系统通知" trigger="click" placement="bottomRight">
+                    <Badge count={notificationErrorCount} dot offset={[-4, 4]}>
+                      <Button type="text" icon={<BellOutlined />} className="action-btn" />
+                    </Badge>
+                  </Popover>
+               </div>
+            </div>
           </div>
         </Header>
         
