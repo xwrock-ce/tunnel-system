@@ -161,7 +161,7 @@ const FaceSegmentationUpload: React.FC = () => {
         description="上传隧道掌子面图片，系统将自动识别掌子面区域并计算超/欠挖情况。使用 YOLOv11 + SAM2 深度学习模型进行精确分割。"
         type="info"
         showIcon
-        style={{ marginBottom: 16 }}
+        className="upload-page-alert"
       />
 
       <div className="upload-status-strip">
@@ -210,21 +210,21 @@ const FaceSegmentationUpload: React.FC = () => {
                   <>
                     <Row gutter={24}>
                       <Col xs={24} md={12}>
-                        <div style={{ marginBottom: 16 }}>
+                        <div className="upload-preview-title">
                           <Text strong>原始图片</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
-                          style={{ maxWidth: '100%', borderRadius: 8 }}
+                          className="upload-preview-image"
                         />
                       </Col>
                       <Col xs={24} md={12}>
-                        <div style={{ marginBottom: 16 }}>
+                        <div className="upload-preview-title">
                           <Text strong>掌子面分割结果</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'overlay')}
-                          style={{ maxWidth: '100%', borderRadius: 10 }}
+                          className="upload-preview-image"
                         />
                       </Col>
                     </Row>
@@ -305,7 +305,7 @@ const FaceSegmentationUpload: React.FC = () => {
                         {singleFile.previewUrl && (
                           <Image
                             src={singleFile.previewUrl}
-                            style={{ maxWidth: '100%', borderRadius: 10 }}
+                            className="upload-preview-image"
                           />
                         )}
                       </div>
@@ -313,7 +313,7 @@ const FaceSegmentationUpload: React.FC = () => {
 
                     {isAnalyzingForPage && (
                       <div className="upload-progress-panel">
-                        <Progress percent={progress} status="active" strokeColor="#4f46e5" />
+                        <Progress percent={progress} status="active" strokeColor="var(--ui-primary)" />
                         <Text type="secondary">{progressMessage}</Text>
                       </div>
                     )}
@@ -324,7 +324,7 @@ const FaceSegmentationUpload: React.FC = () => {
                   <Card
                     title="分析参数"
                     variant="borderless"
-                    extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
                     className="card-surface upload-config-card"
                   >
                     <Form
@@ -336,11 +336,11 @@ const FaceSegmentationUpload: React.FC = () => {
                       }}
                     >
                       <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
-                        <InputNumber style={{ width: '100%' }} min={0.01} precision={2} disabled={isAnalyzingForPage} />
+                        <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
                       <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
-                        <InputNumber style={{ width: '100%' }} min={0.01} precision={2} disabled={isAnalyzingForPage} />
+                        <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>  
 
                       <Form.Item>
@@ -394,7 +394,7 @@ const FaceSegmentationUpload: React.FC = () => {
 
                     {batchFiles.length > 0 && (
                       <div className="upload-preview-panel">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div className="upload-file-row-head">
                           <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
                           <Button
                             type="link"
@@ -413,7 +413,7 @@ const FaceSegmentationUpload: React.FC = () => {
                               className="upload-file-row"
                             >
                               <PaperClipOutlined />
-                              <Text ellipsis style={{ flex: 1 }} className="upload-file-name">{f.name}</Text>
+                              <Text ellipsis className="upload-file-name upload-list-file-name">{f.name}</Text>
                               <Button
                                 type="text"
                                 size="small"
@@ -440,7 +440,7 @@ const FaceSegmentationUpload: React.FC = () => {
                   <Card
                     title="分析参数"
                     variant="borderless"
-                    extra={<Text type="secondary" style={{ fontSize: 12 }}>默认值可在系统设置中修改</Text>}
+                    extra={<Text type="secondary" className="upload-config-extra-note">默认值可在系统设置中修改</Text>}
                     className="card-surface upload-config-card"
                   >
                     <Form
@@ -452,11 +452,11 @@ const FaceSegmentationUpload: React.FC = () => {
                       }}
                     >
                       <Form.Item name="design_area" label="设计面积 (m²)" tooltip="隧道设计轮廓面积">
-                        <InputNumber style={{ width: '100%' }} min={0.01} precision={2} disabled={isAnalyzingForPage} />
+                        <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
                       <Form.Item name="scale" label="比例尺 (mm/pixel)" tooltip="图像像素与实际尺寸的对应关系">
-                        <InputNumber style={{ width: '100%' }} min={0.01} precision={2} disabled={isAnalyzingForPage} />
+                        <InputNumber className="upload-full-width-input" min={0.01} precision={2} disabled={isAnalyzingForPage} />
                       </Form.Item>
 
                       <Form.Item>
@@ -471,7 +471,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           { isAnalyzingForPage ? '提交中…' : '开始批量分割'}
                         </Button>
                       </Form.Item>
-                      <Form.Item style={{ marginBottom: 0 }}>
+                      <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
                           查看历史记录
                         </Button>

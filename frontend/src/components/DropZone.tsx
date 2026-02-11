@@ -2,6 +2,18 @@ import React, { useState, useRef, useCallback } from 'react'
 import { InboxOutlined } from '@ant-design/icons'
 import { Button, message } from 'antd'
 
+const inputVisuallyHiddenStyle: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+}
+
 interface DropZoneProps {
   onFilesSelected: (files: File[]) => void
   multiple?: boolean
@@ -115,23 +127,24 @@ const DropZone: React.FC<DropZoneProps> = ({
     }
   }, [disabled, handleClick])
 
+  const dropzoneClasses = [
+    'dropzone',
+    isDragging ? 'dropzone--dragging' : '',
+    disabled ? 'dropzone--disabled' : '',
+  ].filter(Boolean).join(' ')
+
+  const dropzoneStyle: React.CSSProperties = {
+    background: isDragging ? 'rgba(43, 98, 152, 0.1)' : 'rgba(255, 255, 255, 0.62)',
+    borderColor: isDragging ? 'rgba(43, 98, 152, 0.66)' : 'rgba(43, 62, 85, 0.2)',
+  }
+
   return (
     <>
       {/* Hidden file input - visually hidden but still clickable */}
       <input
         type="file"
         ref={inputRef}
-        style={{
-          position: 'absolute',
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          whiteSpace: 'nowrap',
-          border: 0,
-        }}
+        style={inputVisuallyHiddenStyle}
         accept={accept}
         multiple={multiple}
         onChange={handleInputChange}
@@ -139,7 +152,7 @@ const DropZone: React.FC<DropZoneProps> = ({
 
       {/* Drop zone area */}
       <div
-        className={`dropzone ${isDragging ? 'dropzone--dragging' : ''}`}
+        className={dropzoneClasses}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -150,27 +163,18 @@ const DropZone: React.FC<DropZoneProps> = ({
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
         title={disabled ? '上传中，暂不可用' : '点击或拖拽图片上传'}
-        style={{
-          padding: '32px 24px',
-          background: isDragging ? 'rgba(79, 70, 229, 0.06)' : 'rgba(255, 255, 255, 0.55)',
-          border: `1px dashed ${isDragging ? 'rgba(79, 70, 229, 0.6)' : 'rgba(15, 23, 42, 0.18)'}`,
-          borderRadius: 14,
-          textAlign: 'center',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease',
-          opacity: disabled ? 0.5 : 1,
-        }}
+        style={dropzoneStyle}
       >
         <span className="dropzone-mode-tag">{modeLabel}</span>
         {children || (
           <>
-            <p style={{ marginBottom: 8 }}>
-              <InboxOutlined style={{ fontSize: 48, color: 'rgba(79, 70, 229, 0.65)' }} />
+            <p className="dropzone-icon-wrap">
+              <InboxOutlined className="dropzone-icon" />
             </p>
-            <p style={{ fontSize: 16, color: '#334155', marginBottom: 4 }}>
+            <p className="dropzone-title">
               拖拽图片到此处
             </p>
-            <p style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
+            <p className="dropzone-desc">
               支持 JPG、PNG 格式，单个文件最大 {maxSizeMB}MB
             </p>
             <Button

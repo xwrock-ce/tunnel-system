@@ -354,7 +354,7 @@ const RealTimeData: React.FC = () => {
   ]
 
   return (
-    <div>
+    <div className="realtime-page">
       <div className="realtime-toolbar">
         <span className={`realtime-toolbar-item ${isAutoRefreshEnabled ? 'is-active' : ''}`}>{refreshStatusText}</span>
         <span className="realtime-toolbar-item">WebSocket连接：{wsConnectionsRef.current.size}</span>
@@ -421,7 +421,7 @@ const RealTimeData: React.FC = () => {
 
       <Row gutter={[16, 16]} className="realtime-main-row">
         <Col xs={24} lg={16}>
-          <Card bordered={false} className="kpi-card" bodyStyle={{ padding: 0 }}>
+          <Card bordered={false} className="kpi-card realtime-task-card">
             <div className="realtime-card-head">
               <h3 className="realtime-card-title">活跃分析任务</h3>
               <span className="status-badge neutral realtime-card-badge">每 5 秒自动刷新</span>
@@ -452,9 +452,7 @@ const RealTimeData: React.FC = () => {
         <Col xs={24} lg={8}>
           <Card
             bordered={false}
-            className="kpi-card realtime-system-card"
-            style={{ height: '100%' }}
-            bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+            className="kpi-card realtime-system-card realtime-system-card--full"
           >
             <div className="realtime-card-head realtime-card-head--compact">
               <h3 className="realtime-card-title">设备状态监控</h3>
@@ -557,7 +555,7 @@ const RealTimeData: React.FC = () => {
                             <span className="realtime-resource-value realtime-resource-value--disabled">未检测到</span>
                           </div>
                           <div className="realtime-resource-bar-track">
-                            <div className="realtime-resource-bar is-none" style={{ width: '0%' }} />
+                            <div className="realtime-resource-bar is-none" />
                           </div>
                         </div>
                       )}

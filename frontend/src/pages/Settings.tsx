@@ -4,6 +4,8 @@ import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 
 const { Title, Text, Paragraph } = Typography
 
+const fullWidthInputStyle: React.CSSProperties = { width: '100%' }
+
 const Settings: React.FC = () => {
   const [form] = Form.useForm()
   const { analysisDefaults, setAnalysisDefaults, resetAnalysisDefaults } = useAppSettingsStore()
@@ -37,7 +39,7 @@ const Settings: React.FC = () => {
         </Title>
       </div>
 
-      <Card title="系统信息" bordered={false} style={{ marginBottom: 24 }} className="card-surface">
+      <Card title="系统信息" bordered={false} className="card-surface settings-card-spacing">
         <Descriptions bordered column={1}>
           <Descriptions.Item label="系统版本">
             <Tag color="blue">v1.1.0</Tag>
@@ -57,10 +59,10 @@ const Settings: React.FC = () => {
       <Card
         title="分析默认参数"
         bordered={false}
-        style={{ marginBottom: 24 }}
         className="card-surface"
         extra={
-          <Space>
+          <Space className="settings-card-actions" wrap>
+            <Text type="secondary" className="settings-card-tip">默认值会同步到上传页</Text>
             <Button onClick={handleReset}>恢复默认</Button>
             <Button type="primary" onClick={handleSave}>保存</Button>
           </Space>
@@ -76,7 +78,7 @@ const Settings: React.FC = () => {
               { type: 'number', min: 0.01, message: '设计面积必须大于 0' },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={0.01} precision={2} />
+            <InputNumber style={fullWidthInputStyle} min={0.01} precision={2} />
           </Form.Item>
           <Form.Item
             name="scale"
@@ -87,9 +89,9 @@ const Settings: React.FC = () => {
               { type: 'number', min: 0.01, message: '比例尺必须大于 0' },
             ]}
           >
-            <InputNumber style={{ width: '100%' }} min={0.01} precision={2} />
+            <InputNumber style={fullWidthInputStyle} min={0.01} precision={2} />
           </Form.Item>
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="settings-tolerance-note">
             容差范围当前为 ±2%（判定逻辑在后端配置中固定）。
           </Text>
         </Form>

@@ -51,6 +51,9 @@ const Dashboard: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
 
+  const overSeriesColor = '#2f6fae'
+  const underSeriesColor = '#c9751d'
+
   const quickLinks = [
     { label: '掌子面分析', path: '/upload/face', icon: <PictureOutlined /> },
     { label: '裂缝检测', path: '/upload/crack', icon: <ThunderboltOutlined /> },
@@ -141,31 +144,31 @@ const Dashboard: React.FC = () => {
         {
           label: '超挖面积 (m²)',
           data: overData,
-          borderColor: '#4c78a8',
+          borderColor: overSeriesColor,
           backgroundColor: (context: any) => {
             const ctx = context.chart.ctx
             const gradient = ctx.createLinearGradient(0, 0, 0, 300)
-            gradient.addColorStop(0, 'rgba(76, 120, 168, 0.32)')
-            gradient.addColorStop(1, 'rgba(76, 120, 168, 0)')
+            gradient.addColorStop(0, 'rgba(47, 111, 174, 0.3)')
+            gradient.addColorStop(1, 'rgba(47, 111, 174, 0)')
             return gradient
           },
           borderWidth: 2,
           tension: 0.4,
           fill: true,
           pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#4c78a8',
+          pointBorderColor: overSeriesColor,
           pointRadius: 4,
           pointHoverRadius: 6,
         },
         {
           label: '欠挖面积 (m²)',
           data: underData,
-          borderColor: '#f58518',
+          borderColor: underSeriesColor,
           backgroundColor: (context: any) => {
             const ctx = context.chart.ctx
             const gradient = ctx.createLinearGradient(0, 0, 0, 300)
-            gradient.addColorStop(0, 'rgba(245, 133, 24, 0.28)')
-            gradient.addColorStop(1, 'rgba(245, 133, 24, 0)')
+            gradient.addColorStop(0, 'rgba(201, 117, 29, 0.26)')
+            gradient.addColorStop(1, 'rgba(201, 117, 29, 0)')
             return gradient
           },
           borderWidth: 2,
@@ -192,8 +195,9 @@ const Dashboard: React.FC = () => {
             distribution.minor_under_count,
             distribution.severe_under_count,
           ],
-          backgroundColor: ['#e45756', '#f58518', '#72b7b2', '#54a24b', '#b279a2'],
-          borderWidth: 0,
+          backgroundColor: ['#cf5a62', '#d28a2f', '#5da399', '#6f9f52', '#9d7db6'],
+          borderColor: '#ffffff',
+          borderWidth: 1,
         },
       ],
     }
@@ -209,7 +213,7 @@ const Dashboard: React.FC = () => {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#2a3441',
+        backgroundColor: '#243445',
         padding: 12,
         cornerRadius: 8,
         titleFont: { size: 13, family: "'Inter', sans-serif" },
@@ -223,12 +227,12 @@ const Dashboard: React.FC = () => {
       y: {
         grid: {
           borderDash: [4, 4],
-          color: '#e7ebf0',
+          color: '#e2e9f1',
           drawBorder: false,
         },
         ticks: {
           font: { size: 10, family: "'Inter', sans-serif" },
-          color: '#6e7784',
+          color: '#617182',
         },
         beginAtZero: true,
       },
@@ -236,7 +240,7 @@ const Dashboard: React.FC = () => {
         grid: { display: false },
         ticks: {
           font: { size: 10, family: "'Inter', sans-serif" },
-          color: '#6e7784',
+          color: '#617182',
         },
       },
     },
@@ -262,6 +266,7 @@ const Dashboard: React.FC = () => {
 
   const total = stats.over_excavation_count + stats.under_excavation_count + stats.normal_count
   const normalPercent = total > 0 ? (stats.normal_count / total) * 100 : 0
+  const normalPercentSafe = Math.max(0, Math.min(100, normalPercent))
   const abnormalCount = stats.over_excavation_count + stats.under_excavation_count
   const trendSummaryText =
     trendData && trendData.labels.length > 0
@@ -371,7 +376,7 @@ const Dashboard: React.FC = () => {
   ]
 
   return (
-    <div>
+    <div className="dashboard-page">
       <div className="dashboard-toolbar">
         <div className="dashboard-toolbar-left">
           <div className="dashboard-toolbar-title">快捷入口</div>
@@ -476,7 +481,7 @@ const Dashboard: React.FC = () => {
               <span className="dashboard-kpi-unit">%</span>
             </div>
             <div className="dashboard-progress-track">
-              <div className="dashboard-progress-bar" style={{ width: `${normalPercent}%` }} />
+              <div className="dashboard-progress-bar" style={{ width: `${normalPercentSafe}%` }} />
             </div>
           </Card>
         </Col>
@@ -484,7 +489,7 @@ const Dashboard: React.FC = () => {
 
       <Row gutter={[16, 16]} className="dashboard-section-row">
         <Col xs={24} lg={16}>
-          <Card bordered={false} className="kpi-card" bodyStyle={{ padding: 24 }}>
+          <Card bordered={false} className="kpi-card dashboard-chart-card">
             <div className="dashboard-chart-head">
               <div>
                 <h3 className="dashboard-card-title">超欠挖变化 (按分析序列)</h3>
@@ -518,9 +523,7 @@ const Dashboard: React.FC = () => {
         <Col xs={24} lg={8}>
           <Card
             bordered={false}
-            className="kpi-card dashboard-distribution-card"
-            style={{ height: '100%' }}
-            bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+            className="kpi-card dashboard-distribution-card dashboard-distribution-card--full"
           >
             <div className="dashboard-distribution-head">
               <h3 className="dashboard-card-title dashboard-card-title--small">偏差分布统计</h3>
@@ -594,7 +597,7 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Card bordered={false} className="kpi-card dashboard-table-card" bodyStyle={{ padding: 0 }}>
+      <Card bordered={false} className="kpi-card dashboard-table-card dashboard-table-card--latest">
         <div className="dashboard-table-head">
           <h3 className="dashboard-card-title dashboard-card-title--small">最新分析序列</h3>
           <Button size="small" type="text" icon={<HistoryOutlined />} onClick={() => navigate('/history')}>

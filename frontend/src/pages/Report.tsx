@@ -92,11 +92,11 @@ const Report: React.FC = () => {
   const getStatusTag = (status: string) => {
     switch (status) {
       case 'over_excavation':
-        return <Tag color="error" style={{ fontSize: 14, padding: '4px 12px' }}>超挖异常</Tag>
+        return <Tag color="error" className="report-status-tag">超挖异常</Tag>
       case 'under_excavation':
-        return <Tag color="warning" style={{ fontSize: 14, padding: '4px 12px' }}>欠挖异常</Tag>
+        return <Tag color="warning" className="report-status-tag">欠挖异常</Tag>
       case 'within_tolerance':
-        return <Tag color="success" style={{ fontSize: 14, padding: '4px 12px' }}>合格</Tag>
+        return <Tag color="success" className="report-status-tag">合格</Tag>
       default:
         return <Tag>{status}</Tag>
     }
@@ -200,8 +200,10 @@ const Report: React.FC = () => {
       ? activeComparisonKey
       : comparisonItems[0]?.key
 
+  const differencePercentColor = Math.abs(excavation?.difference_percent ?? 0) > 5 ? '#cf1322' : '#3f8600'
+
   return (
-    <div className="report-page">
+    <div className="report-page report-page-unified">
       <div className="page-header report-header">
         <div className="report-header-main">
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/history')} type="text" />
@@ -302,7 +304,7 @@ const Report: React.FC = () => {
                   title="开挖面积偏差"
                   value={excavation.difference_percent}
                   precision={2}
-                  valueStyle={{ color: Math.abs(excavation.difference_percent) > 5 ? '#cf1322' : '#3f8600' }}
+                  valueStyle={{ color: differencePercentColor }}
                   prefix={excavation.difference_percent > 0 ? '+' : ''}
                   suffix="%"
                 />

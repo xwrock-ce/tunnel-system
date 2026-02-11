@@ -157,7 +157,7 @@ const CrackDetectionUpload: React.FC = () => {
         type="warning"
         showIcon
         icon={<WarningOutlined />}
-        style={{ marginBottom: 16 }}
+        className="upload-page-alert"
       />
 
       <div className="upload-status-strip upload-status-strip-warning">
@@ -206,21 +206,21 @@ const CrackDetectionUpload: React.FC = () => {
                   <>
                     <Row gutter={24}>
                       <Col xs={24} md={12}>
-                        <div style={{ marginBottom: 16 }}>
+                        <div className="upload-preview-title">
                           <Text strong>原始图片</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
-                          style={{ maxWidth: '100%', borderRadius: 8 }}
+                          className="upload-preview-image"
                         />
                       </Col>
                       <Col xs={24} md={12}>
-                        <div style={{ marginBottom: 16 }}>
+                        <div className="upload-preview-title">
                           <Text strong>裂缝检测结果</Text>
                         </div>
                         <Image
                           src={analysisApi.getImageUrl(currentAnalysis.id, 'crack_overlay')}
-                          style={{ maxWidth: '100%', borderRadius: 10 }}
+                          className="upload-preview-image"
                           fallback={analysisApi.getImageUrl(currentAnalysis.id, 'original')}
                         />
                       </Col>
@@ -308,7 +308,7 @@ const CrackDetectionUpload: React.FC = () => {
                         {singleFile.previewUrl && (
                           <Image
                             src={singleFile.previewUrl}
-                            style={{ maxWidth: '100%', borderRadius: 10 }}
+                            className="upload-preview-image"
                           />
                         )}
                       </div>
@@ -340,7 +340,7 @@ const CrackDetectionUpload: React.FC = () => {
                         message="自动检测"
                         description="系统将使用预训练的 YOLOv11 模型自动检测图片中的裂缝，无需额外参数设置。"
                         type="info"
-                        style={{ marginBottom: 16 }}
+                        className="upload-page-alert"
                       />
 
                       <Form.Item>
@@ -395,7 +395,7 @@ const CrackDetectionUpload: React.FC = () => {
 
                     {batchFiles.length > 0 && (
                       <div className="upload-preview-panel">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div className="upload-file-row-head">
                           <Text type="secondary">已选择 {batchFiles.length} 张图片</Text>
                           <Button
                             type="link"
@@ -414,7 +414,7 @@ const CrackDetectionUpload: React.FC = () => {
                               className="upload-file-row"
                             >
                               <PaperClipOutlined />
-                              <Text ellipsis style={{ flex: 1 }} className="upload-file-name">{f.name}</Text>
+                              <Text ellipsis className="upload-file-name upload-list-file-name">{f.name}</Text>
                               <Button
                                 type="text"
                                 size="small"
@@ -451,7 +451,7 @@ const CrackDetectionUpload: React.FC = () => {
                         message="批量自动检测"
                         description="所有图片将使用相同的检测模型进行处理，结果可在历史记录中查看。"
                         type="info"
-                        style={{ marginBottom: 16 }}
+                        className="upload-page-alert"
                       />
 
                       <Form.Item>
@@ -467,7 +467,7 @@ const CrackDetectionUpload: React.FC = () => {
                           {isAnalyzingForPage ? '提交中…' : '开始批量检测'}
                         </Button>
                       </Form.Item>
-                      <Form.Item style={{ marginBottom: 0 }}>
+                      <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
                           查看历史记录
                         </Button>

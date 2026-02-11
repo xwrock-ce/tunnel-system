@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   Layout, Menu, Button, Dropdown, type MenuProps, Breadcrumb, Input, Badge,
-  Avatar, theme, Modal, List, Descriptions, Popover, Tabs, Tooltip
+  Avatar, Modal, List, Descriptions, Popover, Tabs, Tooltip
 } from 'antd'
 import {
   DashboardOutlined,
@@ -37,7 +37,6 @@ const MainLayout: React.FC = () => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { currentProject } = useProjectStore()
-  const { token: { borderRadiusLG } } = theme.useToken();
 
   const handleSearch = (value: string) => {
     if (!value.trim()) return
@@ -304,12 +303,7 @@ const MainLayout: React.FC = () => {
           </div>
         </Header>
         
-        <Content
-          className="app-content"
-          style={{
-            borderRadius: borderRadiusLG,
-          }}
-        >
+        <Content className="app-content">
           <Outlet />
         </Content>
         

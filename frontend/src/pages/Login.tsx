@@ -20,6 +20,15 @@ const Login: React.FC = () => {
   const [form] = Form.useForm()
   const { token: { colorPrimary } } = theme.useToken();
 
+  const titleStyle: React.CSSProperties = {
+    marginBottom: 8,
+    fontWeight: 700,
+  }
+
+  const iconStyle: React.CSSProperties = {
+    color: '#94a3b8',
+  }
+
   useEffect(() => {
     if (token) {
       navigate('/dashboard')
@@ -68,7 +77,7 @@ const Login: React.FC = () => {
           <div className="login-slogan">
              <h1 className="slogan-title">
                Looking Deep into <br/>
-               <span style={{ color: colorPrimary }}>Tunnel Vision</span>
+               <span className="login-highlight" style={{ color: colorPrimary }}>Tunnel Vision</span>
              </h1>
              <p className="slogan-desc">
                下一代智能隧道掌子面分析平台。<br/>
@@ -94,7 +103,7 @@ const Login: React.FC = () => {
           {/* Right Side: Login Card */}
           <div className="login-card">
             <div className="login-header">
-              <Title level={3} style={{ marginBottom: 8, fontWeight: 700 }}>欢迎回来</Title>
+              <Title level={3} style={titleStyle}>欢迎回来</Title>
               <Text type="secondary">登录以访问您的工程仪表盘</Text>
             </div>
 
@@ -112,7 +121,7 @@ const Login: React.FC = () => {
                 rules={[{ required: true, message: '请输入用户名' }]}
               >
                 <Input 
-                  prefix={<UserOutlined style={{ color: '#94a3b8' }} />} 
+                  prefix={<UserOutlined style={iconStyle} />} 
                   placeholder="用户名 / 邮箱" 
                   className="login-input"
                 />
@@ -123,13 +132,13 @@ const Login: React.FC = () => {
                 rules={[{ required: true, message: '请输入密码' }]}
               >
                 <Input.Password 
-                  prefix={<LockOutlined style={{ color: '#94a3b8' }} />} 
+                  prefix={<LockOutlined style={iconStyle} />} 
                   placeholder="密码" 
                   className="login-input"
                 />
               </Form.Item>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div className="login-options-row">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                   <Checkbox>记住我</Checkbox>
                 </Form.Item>
@@ -144,8 +153,8 @@ const Login: React.FC = () => {
             </Form>
 
             <div className="login-footer">
-              <span style={{ color: '#64748b' }}>还没有账号?</span>
-              <a href="#" style={{ marginLeft: 8, fontWeight: 600 }}>申请试用</a>
+              <span className="login-footer-text">还没有账号?</span>
+              <a href="#" className="login-footer-link">申请试用</a>
             </div>
           </div>
         </div>

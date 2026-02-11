@@ -228,7 +228,7 @@ const History: React.FC = () => {
           : '全部状态'
 
   return (
-    <div>
+    <div className="history-page">
       <div className="page-header">
         <Title level={4} className="page-title">
           历史记录
