@@ -6,6 +6,8 @@ import App from './App'
 import './styles/global.css'
 import './styles/nature-theme.css'
 import './styles/ui-unified.css'
+import './styles/app-harmony.css'
+import './styles/auth-login.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

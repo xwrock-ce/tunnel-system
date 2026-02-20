@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   Layout, Menu, Button, Dropdown, type MenuProps, Breadcrumb, Input, Badge,
-  Avatar, Modal, List, Descriptions, Popover, Tabs, Tooltip
+  Avatar, Modal, List, Descriptions, Popover, Tabs, Tooltip, theme
 } from 'antd'
 import {
   DashboardOutlined,
@@ -25,10 +25,34 @@ import {
 } from '@ant-design/icons'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useProjectStore } from '@/stores/useProjectStore'
-import TunnelIcon from '@/components/icons/TunnelIcon'
+import LoginPortalIcon from '@/components/icons/LoginPortalIcon'
 
 const { Header, Sider, Content } = Layout
 const { TabPane } = Tabs
+
+const getRgbValue = (hexColor: string): string => {
+  const sanitized = hexColor.trim().replace('#', '')
+
+  if (!/^[0-9a-fA-F]{3,6}$/.test(sanitized)) {
+    return '37, 99, 235'
+  }
+
+  const fullHex =
+    sanitized.length === 3
+      ? sanitized
+          .split('')
+          .map(char => `${char}${char}`)
+          .join('')
+      : sanitized.slice(0, 6)
+
+  const parts = fullHex.match(/.{2}/g)
+
+  if (!parts) {
+    return '37, 99, 235'
+  }
+
+  return parts.map(part => Number.parseInt(part, 16)).join(', ')
+}
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
@@ -37,6 +61,18 @@ const MainLayout: React.FC = () => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { currentProject } = useProjectStore()
+  const {
+    token: { colorPrimary },
+  } = theme.useToken()
+
+  const layoutThemeStyle = useMemo(
+    () =>
+      ({
+        '--auth-primary': colorPrimary,
+        '--auth-primary-rgb': getRgbValue(colorPrimary),
+      }) as React.CSSProperties,
+    [colorPrimary],
+  )
 
   const handleSearch = (value: string) => {
     if (!value.trim()) return
@@ -198,7 +234,7 @@ const MainLayout: React.FC = () => {
   const currentPageTitle = String(breadcrumbs[breadcrumbs.length - 1]?.title || '首页')
 
   return (
-    <Layout className="app-layout">
+    <Layout className="app-layout app-theme-harmony" style={layoutThemeStyle}>
       <Sider
         trigger={null}
         collapsible
@@ -209,12 +245,12 @@ const MainLayout: React.FC = () => {
       >
         <div className="sidebar-logo-container">
           <div className="logo-box">
-            <TunnelIcon size={20} className="brand-mark-icon" />
+            <LoginPortalIcon size={20} className="app-brand-mark-icon" />
           </div>
           {!collapsed && (
             <div className="logo-text">
-              <h1>Tunnel AI</h1>
-              <span>Intelligent System</span>
+              <h1>Tunnel AI Platform</h1>
+              <span>工程智能工作台</span>
             </div>
           )}
         </div>
@@ -233,7 +269,12 @@ const MainLayout: React.FC = () => {
 
         {/* Bottom User Section */}
         <div className="sidebar-user-section">
-           <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="topRight" trigger={['click']}>
+           <Dropdown
+             menu={{ items: userMenuItems, onClick: handleMenuClick }}
+             placement="topRight"
+             trigger={['click']}
+             overlayClassName="app-theme-harmony-dropdown"
+           >
               <div className={`user-card ${collapsed ? 'collapsed' : ''}`}>
                  <Avatar size="small" icon={<UserOutlined />} className="sidebar-user-avatar" />
                  {!collapsed && (
@@ -265,7 +306,13 @@ const MainLayout: React.FC = () => {
             </div>
 
             <div className="header-right">
-               <Popover content={projectContent} title="项目详情" trigger="hover" placement="bottomRight">
+               <Popover
+                 content={projectContent}
+                 title="项目详情"
+                 trigger="hover"
+                 placement="bottomRight"
+                 overlayClassName="app-theme-harmony-popover"
+               >
                  <button type="button" className="project-selector-btn" aria-label="查看当前项目详情">
                     <span className="project-selector-main">
                       <ProjectOutlined className="project-selector-icon" />
@@ -301,7 +348,13 @@ const MainLayout: React.FC = () => {
                     />
                   </Tooltip>
 
-                  <Popover content={notificationContent} title="系统通知" trigger="click" placement="bottomRight">
+                  <Popover
+                    content={notificationContent}
+                    title="系统通知"
+                    trigger="click"
+                    placement="bottomRight"
+                    overlayClassName="app-theme-harmony-popover"
+                  >
                     <Badge count={notificationErrorCount} dot offset={[-4, 4]}>
                       <Button type="text" icon={<BellOutlined />} className="action-btn" />
                     </Badge>
@@ -319,6 +372,7 @@ const MainLayout: React.FC = () => {
           title="帮助中心"
           open={isHelpModalOpen}
           onCancel={() => setIsHelpModalOpen(false)}
+          className="app-theme-harmony-modal"
           footer={[
             <Button key="close" onClick={() => setIsHelpModalOpen(false)}>
               关闭
