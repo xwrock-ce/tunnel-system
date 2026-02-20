@@ -48,7 +48,7 @@ const Settings: React.FC = () => {
             <Text>YOLOv11 + SAM2（掌子面分割） + YOLOv11（裂缝检测/分割）</Text>
           </Descriptions.Item>
           <Descriptions.Item label="后端框架">
-            <Text>FastAPI</Text>
+            <Text>Go</Text>
           </Descriptions.Item>
           <Descriptions.Item label="前端框架">
             <Text>React 18 + Ant Design 5</Text>

@@ -14,7 +14,7 @@ services:
       - tunnel-net
     restart: unless-stopped
 
-  # Backend (FastAPI)
+  # Backend (Go + Python ML worker)
   backend:
     build:
       context: ./backend
@@ -25,7 +25,7 @@ services:
       - ./model_weights:/app/model_weights:ro
       - ./uploads:/app/uploads
       - ./static:/app/static
-      - tunnel_db:/app/data
+      - tunnel_db:/app/backend/data
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
       - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}

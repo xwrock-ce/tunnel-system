@@ -1,7 +1,21 @@
-# Backend Dockerfile
+# Backend Dockerfile (Go API + Python ML worker)
+
+# ---- Build Go server ----
+FROM golang:1.26 AS go-builder
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd ./cmd
+COPY internal ./internal
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /out/tunnel-server ./cmd/server
+
+
+# ---- Runtime: Python environment for ML + Go binary ----
 FROM python:3.11-slim
 
-# Install system dependencies
+# System dependencies required by OpenCV / torch runtime
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
@@ -11,25 +25,25 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
+# Install uv for Python dependency installation
 RUN pip install uv
 
-WORKDIR /app
+WORKDIR /app/backend
 
-# Copy dependency files
+# Install Python ML dependencies
 COPY pyproject.toml ./
-
-# Install dependencies
 RUN uv pip install --system -e .
 
-# Copy application code
+# Copy ML modules and worker script
 COPY app ./app
+COPY ml_worker ./ml_worker
 
-# Create directories
-RUN mkdir -p /app/uploads /app/static
+# Copy Go server binary
+COPY --from=go-builder /out/tunnel-server /usr/local/bin/tunnel-server
 
-# Expose port
+# Prepare runtime directories
+RUN mkdir -p /app/uploads /app/static /app/backend/data
+
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["tunnel-server"]

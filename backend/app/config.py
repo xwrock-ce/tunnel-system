@@ -48,13 +48,18 @@ class Settings(BaseSettings):
     STATIC_DIR: Path = BASE_DIR / "static"
     DATABASE_URL: str = "sqlite+aiosqlite:///./tunnel.db"
 
-    # Model paths (relative to MODEL_WEIGHTS_DIR)
+    # Model paths:
+    # - *_WEIGHTS / *_CHECKPOINT are relative to MODEL_WEIGHTS_DIR.
+    # - SAM2_CONFIG can be a Hydra config name (recommended) such as
+    #   "configs/sam2.1/sam2.1_hiera_b+.yaml", or a filesystem-like path that
+    #   ends with the same config file.
     YOLO_WEIGHTS: str = "yolo_best.pt"
     CRACK_YOLO_WEIGHTS: str = "crack_best.pt"
-    CRACK_USE_SAM2: bool = False
     SAM2_BASE_CHECKPOINT: str = "sam2_base.pt"
     SAM2_FINETUNED_CHECKPOINT: str = "sam2_finetuned.pt"
-    SAM2_CONFIG: str = "sam2_configs/sam2.1/sam2.1_hiera_b+.yaml"
+    SAM2_CONFIG: str = "configs/sam2.1/sam2.1_hiera_b+.yaml"
+    # If True, face segmentation will fail unless final mask is produced by SAM2.
+    SAM2_STRICT_FACE_SEGMENTATION: bool = True
 
     # Excavation analysis parameters
     SCALE_MM_PER_PIXEL: float = 7.6

@@ -8,6 +8,39 @@ cd "$PROJECT_DIR"
 
 echo "=== Tunnel Excavation Detection System - Development Mode ==="
 
+# If proxy points to localhost but local proxy service is down, disable it
+# for this script run to avoid dependency install failures.
+check_and_fix_proxy() {
+    local proxy_val="${https_proxy:-${HTTPS_PROXY:-${http_proxy:-${HTTP_PROXY:-${all_proxy:-${ALL_PROXY:-}}}}}}"
+    if [ -z "$proxy_val" ]; then
+        return
+    fi
+
+    local hostport host port
+    hostport="$(printf '%s' "$proxy_val" | sed -E 's#^[a-zA-Z]+://##; s#/.*$##')"
+    host="${hostport%%:*}"
+    port="${hostport##*:}"
+
+    if [ -z "$host" ] || [ -z "$port" ] || [ "$host" = "$hostport" ]; then
+        return
+    fi
+
+    if [ "$host" != "127.0.0.1" ] && [ "$host" != "localhost" ]; then
+        return
+    fi
+
+    if ! (exec 3<>"/dev/tcp/$host/$port") >/dev/null 2>&1; then
+        echo "WARNING: proxy $proxy_val is configured but not reachable."
+        echo "WARNING: disabling *_proxy for this run."
+        unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+    else
+        exec 3>&- 2>/dev/null || true
+        exec 3<&- 2>/dev/null || true
+    fi
+}
+
+check_and_fix_proxy
+
 # Check model weights (non-blocking)
 MODEL_DIR="$PROJECT_DIR/model_weights"
 YOLO_WEIGHTS_FILE="yolo_best.pt"
@@ -38,7 +71,7 @@ if [ "$MISSING_WEIGHTS" = true ]; then
     echo "Place files under $MODEL_DIR or update .env (YOLO_WEIGHTS/CRACK_YOLO_WEIGHTS)."
 fi
 
-# Check if backend virtual environment exists
+# Check if backend virtual environment exists (used by Python ML worker)
 if [ ! -d "backend/.venv" ]; then
     echo "Creating backend virtual environment..."
     cd backend
@@ -48,11 +81,41 @@ if [ ! -d "backend/.venv" ]; then
 else
     BACKEND_PY_VERSION="$(backend/.venv/bin/python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")' 2>/dev/null || true)"
     if [ "$BACKEND_PY_VERSION" = "3.13" ]; then
-        echo "Detected backend venv using Python $BACKEND_PY_VERSION, which can cause SQLite async hangs."
+        echo "Detected backend venv using Python $BACKEND_PY_VERSION, which may break some ML dependencies."
         echo "Please remove backend/.venv and rerun this script (it will recreate with Python 3.12)."
         exit 1
     fi
 fi
+
+echo "Checking backend Python ML dependencies..."
+cd backend
+if .venv/bin/python - <<'PY'
+import importlib.util
+required = ("ultralytics", "cv2", "torch", "numpy", "hydra", "iopath")
+missing = [name for name in required if importlib.util.find_spec(name) is None]
+if missing:
+    raise SystemExit(1)
+PY
+then
+    echo "Backend ML dependencies already available, skipping sync."
+else
+    echo "Installing backend Python ML dependencies..."
+    if ! uv pip install -e .; then
+        echo "ERROR: failed to install backend Python dependencies and required modules are missing."
+        echo "If you are behind a proxy, start your proxy service or unset *_proxy env vars."
+        exit 1
+    fi
+fi
+cd ..
+
+# Ensure Go dependencies are available
+echo "Preparing Go backend dependencies..."
+cd backend
+if ! go mod download; then
+    echo "WARNING: failed to download Go modules. Continuing with local module cache."
+    echo "If build later fails, start your proxy service or unset *_proxy env vars."
+fi
+cd ..
 
 # Check if frontend dependencies are installed
 if [ ! -d "frontend/node_modules" ]; then
@@ -76,7 +139,7 @@ trap cleanup SIGINT SIGTERM
 echo "Starting backend on http://localhost:8000..."
 cd backend
 source .venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+ANALYZER_MODE="${ANALYZER_MODE:-python}" go run ./cmd/server &
 BACKEND_PID=$!
 cd ..
 
@@ -94,7 +157,6 @@ echo ""
 echo "=== Services Started ==="
 echo "Frontend: http://localhost:3000"
 echo "Backend:  http://localhost:8000"
-echo "API Docs: http://localhost:8000/docs"
 echo ""
 echo "Press Ctrl+C to stop all services"
 

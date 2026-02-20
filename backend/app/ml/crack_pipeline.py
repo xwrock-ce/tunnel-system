@@ -84,9 +84,6 @@ class CrackSegmentationPipeline:
         self,
         image: np.ndarray,
         face_mask: Optional[np.ndarray] = None,
-        sam2_predictor=None,
-        use_sam2_refinement: bool = True,
-        sam2_image_preloaded: bool = False,
         conf_threshold: float = 0.15,  # Lowered default for better detection
         iou_threshold: float = 0.5,
         max_det: int = 100,
