@@ -231,8 +231,8 @@ const Dashboard: React.FC = () => {
         bodySpacing: 4,
         padding: 12,
         cornerRadius: 10,
-        titleFont: { size: 13, family: "'Inter', sans-serif" },
-        bodyFont: { size: 12, family: "'Inter', sans-serif" },
+        titleFont: { size: 13, family: "'IBM Plex Sans', 'Noto Sans SC', sans-serif" },
+        bodyFont: { size: 12, family: "'IBM Plex Sans', 'Noto Sans SC', sans-serif" },
         bodyColor: '#d7e7fa',
         titleColor: '#f8fbff',
         callbacks: {
@@ -249,7 +249,7 @@ const Dashboard: React.FC = () => {
           drawBorder: false,
         },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" },
+          font: { size: 10, family: "'IBM Plex Sans', 'Noto Sans SC', sans-serif" },
           color: '#617182',
         },
         beginAtZero: true,
@@ -257,7 +257,7 @@ const Dashboard: React.FC = () => {
       x: {
         grid: { display: false },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" },
+          font: { size: 10, family: "'IBM Plex Sans', 'Noto Sans SC', sans-serif" },
           color: '#617182',
         },
       },

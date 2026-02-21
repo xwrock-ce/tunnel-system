@@ -88,7 +88,7 @@ body:has(.app-theme-harmony) {
   line-height: 42px;
   margin: 4px 6px;
   padding-inline: 12px !important;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #c5d4ea !important;
   font-weight: 560;
 }
@@ -119,7 +119,7 @@ body:has(.app-theme-harmony) {
 .app-theme-harmony .app-menu .ant-menu-sub.ant-menu-inline {
   margin: 6px 8px 10px;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(165, 190, 226, 0.22);
   background: linear-gradient(180deg, rgba(8, 22, 42, 0.62), rgba(15, 33, 60, 0.78)) !important;
 }
@@ -128,7 +128,7 @@ body:has(.app-theme-harmony) {
   margin: 3px 0;
   height: 38px;
   line-height: 38px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .app-theme-harmony .app-menu .ant-menu-sub.ant-menu-inline > .ant-menu-item-selected {
@@ -140,7 +140,7 @@ body:has(.app-theme-harmony) {
 .app-theme-harmony .sidebar-user-section {
   margin: 6px 10px 0;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(167, 192, 227, 0.22);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
 }
@@ -188,7 +188,7 @@ body:has(.app-theme-harmony) {
 .app-theme-harmony .header-search-input .ant-input-wrapper,
 .app-theme-harmony .header-search-input .ant-input-affix-wrapper {
   border: 1px solid var(--harmony-border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
   box-shadow: 0 10px 20px -20px rgba(15, 23, 42, 0.24);
 }
@@ -272,7 +272,7 @@ body:has(.app-theme-harmony) {
 }
 
 .app-theme-harmony .ant-btn {
-  border-radius: 12px;
+  border-radius: 14px;
   font-weight: 600;
 }
 
@@ -312,7 +312,7 @@ body:has(.app-theme-harmony) {
 .app-theme-harmony .ant-picker,
 .app-theme-harmony .ant-upload-wrapper .ant-upload-drag {
   border-color: rgba(195, 211, 232, 0.92) !important;
-  border-radius: 11px !important;
+  border-radius: 14px !important;
   background: #ffffff;
 }
 
@@ -356,7 +356,7 @@ body:has(.app-theme-harmony) {
 }
 
 .app-theme-harmony .ant-table {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .app-theme-harmony .ant-table-thead > tr > th {
@@ -388,7 +388,7 @@ body:has(.app-theme-harmony) {
 }
 
 .app-theme-harmony .ant-alert {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .app-theme-harmony .ant-pagination .ant-pagination-item {

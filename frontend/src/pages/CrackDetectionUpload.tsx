@@ -45,6 +45,16 @@ const CrackDetectionUpload: React.FC = () => {
   const isAnalyzingForPage = isAnalyzing && currentAnalysisType === 'crack_detection'
   const selectedCount = mode === 'single' ? (singleFile ? 1 : 0) : batchFiles.length
   const modeText = mode === 'single' ? UI_COPY.upload.crack.status.singleMode : UI_COPY.upload.crack.status.batchMode
+  const singleActionHint = isAnalyzingForPage
+    ? '任务处理中，请勿重复提交。'
+    : singleFile
+      ? '已选择图片，确认后可开始裂缝检测。'
+      : '请先上传一张待检测图片。'
+  const batchActionHint = isAnalyzingForPage
+    ? '批量任务提交中，请稍候。'
+    : batchFiles.length > 0
+      ? `已准备 ${batchFiles.length} 张图片，可开始批量检测。`
+      : '请先添加待检测图片。'
 
   useEffect(() => {
     if (isAnalyzingForPage) return
@@ -365,6 +375,7 @@ const CrackDetectionUpload: React.FC = () => {
                           {isAnalyzingForPage ? UI_COPY.upload.crack.buttons.detecting : UI_COPY.upload.crack.buttons.startSingle}
                         </Button>
                       </Form.Item>
+                      <Text type="secondary" className="upload-action-hint">{singleActionHint}</Text>
                     </Form>
                   </Card>
                 </Col>
@@ -477,6 +488,7 @@ const CrackDetectionUpload: React.FC = () => {
                           {isAnalyzingForPage ? UI_COPY.upload.crack.buttons.submitting : UI_COPY.upload.crack.buttons.startBatch}
                         </Button>
                       </Form.Item>
+                      <Text type="secondary" className="upload-action-hint">{batchActionHint}</Text>
                       <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
                           {UI_COPY.upload.crack.buttons.viewHistory}

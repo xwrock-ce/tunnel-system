@@ -45,6 +45,16 @@ const FaceSegmentationUpload: React.FC = () => {
   const isAnalyzingForPage = isAnalyzing && currentAnalysisType === 'face_segmentation'
   const selectedCount = mode === 'single' ? (singleFile ? 1 : 0) : batchFiles.length
   const modeText = mode === 'single' ? UI_COPY.upload.face.status.singleMode : UI_COPY.upload.face.status.batchMode
+  const singleActionHint = isAnalyzingForPage
+    ? '任务处理中，请勿重复提交。'
+    : singleFile
+      ? '已选择图片，确认参数后可开始分析。'
+      : '请先上传一张掌子面图片。'
+  const batchActionHint = isAnalyzingForPage
+    ? '批量任务提交中，请稍候。'
+    : batchFiles.length > 0
+      ? `已准备 ${batchFiles.length} 张图片，可开始批量分析。`
+      : '请先添加待分析图片。'
 
   useEffect(() => {
     if (isAnalyzingForPage) return
@@ -364,6 +374,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           {isAnalyzingForPage ? UI_COPY.upload.face.buttons.analyzing : UI_COPY.upload.face.buttons.startSingle}
                         </Button>
                       </Form.Item>
+                      <Text type="secondary" className="upload-action-hint">{singleActionHint}</Text>
                     </Form>
                   </Card>
                 </Col>
@@ -481,6 +492,7 @@ const FaceSegmentationUpload: React.FC = () => {
                           {isAnalyzingForPage ? UI_COPY.upload.face.buttons.submitting : UI_COPY.upload.face.buttons.startBatch}
                         </Button>
                       </Form.Item>
+                      <Text type="secondary" className="upload-action-hint">{batchActionHint}</Text>
                       <Form.Item className="upload-form-item-no-bottom">
                         <Button block onClick={() => navigate('/history')} icon={<HistoryOutlined />}>
                           {UI_COPY.upload.face.buttons.viewHistory}

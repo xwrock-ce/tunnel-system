@@ -57,7 +57,7 @@
 .login-v4__shell {
   width: min(1200px, 100%);
   margin: 0 auto;
-  border-radius: 30px;
+  border-radius: 32px;
   border: 1px solid rgba(196, 210, 232, 0.86);
   background: rgba(255, 255, 255, 0.78);
   box-shadow:
@@ -112,9 +112,9 @@
 }
 
 .login-v4__brand-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -242,9 +242,9 @@
 }
 
 .login-v4__timeline-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -327,7 +327,7 @@
 .login-v4__input.ant-input-affix-wrapper,
 .login-v4__input .ant-input,
 .login-v4__input .ant-input-affix-wrapper {
-  border-radius: 12px;
+  border-radius: 14px;
   border-color: rgba(189, 206, 229, 0.9);
   background: #fbfdff;
 }
@@ -394,9 +394,9 @@
 }
 
 .login-v4__submit {
-  height: 50px;
+  height: 52px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.012em;
@@ -532,7 +532,7 @@
   }
 
   .login-v4__submit {
-    height: 46px;
+    height: 48px;
   }
 }
 

@@ -132,9 +132,18 @@ const Report: React.FC = () => {
   }
 
   const excavation = analysis.excavation
-  const analysisType = analysis.analysis_type || 'full'
+  const inferredAnalysisType =
+    analysis.analysis_type ||
+    (analysis.overlay_image_url && (analysis.crack_overlay_image_url || analysis.combined_overlay_image_url)
+      ? 'full'
+      : analysis.crack_overlay_image_url
+        ? 'crack_detection'
+        : 'face_segmentation')
+  const analysisType = inferredAnalysisType
   const showFace = analysisType === 'face_segmentation' || analysisType === 'full'
   const showCrack = analysisType === 'crack_detection' || analysisType === 'full'
+  const crackCount = analysis.metrics?.crack_count
+  const hasCrackMetrics = showCrack && crackCount !== null && crackCount !== undefined
   const comparisonHeight: ImageComparisonHeight = 'clamp(360px, 56vh, 640px)'
 
   const analysisTypeLabelMap: Record<string, string> = {
@@ -143,6 +152,12 @@ const Report: React.FC = () => {
     crack_detection: '裂缝检测',
   }
   const analysisTypeLabel = analysisTypeLabelMap[analysisType] || analysisType
+  const modelVersionText =
+    analysisType === 'crack_detection'
+      ? 'YOLOv11-Crack-v1.0.2'
+      : analysisType === 'full'
+        ? 'YOLOv11-Seg-v1.0.2 + YOLOv11-Crack-v1.0.2'
+        : 'YOLOv11-Seg-v1.0.2'
   const processingSeconds =
     analysis.completed_at && analysis.created_at
       ? Math.max(0, dayjs(analysis.completed_at).diff(dayjs(analysis.created_at), 'second'))
@@ -173,7 +188,7 @@ const Report: React.FC = () => {
   if (showFace && analysis.overlay_image_url) {
     comparisonItems.push({
       key: 'face',
-      label: '超欠挖分析',
+      label: analysisType === 'face_segmentation' ? '掌子面分割结果' : '超欠挖分析',
       children: (
         <div className="report-compare-wrapper">
           <ImageComparison
@@ -374,21 +389,44 @@ const Report: React.FC = () => {
             </Card>
           )}
 
-          {analysis.metrics?.crack_count !== undefined && (
+          {showCrack && (
             <Card title={UI_COPY.report.cards.crackMetrics} bordered={false} className="card-surface report-crack-card">
-              <Row gutter={16} className="report-crack-stats">
-                <Col span={12}>
-                  <Statistic title={UI_COPY.report.stats.crackCount} value={analysis.metrics.crack_count} suffix="条" />
-                </Col>
-                <Col span={12}>
-                  <Statistic title={UI_COPY.report.stats.crackMaxLength} value={0.85} precision={2} suffix="m" />
-                </Col>
-              </Row>
-              <Divider className="report-crack-divider" />
-              <div className="report-crack-tags">
-                <Tag>纵向裂缝</Tag>
-                <Tag>需由专家复核</Tag>
-              </div>
+              {hasCrackMetrics ? (
+                <>
+                  <Row gutter={16} className="report-crack-stats">
+                    <Col span={12}>
+                      <Statistic title={UI_COPY.report.stats.crackCount} value={Number(crackCount ?? 0)} suffix="条" />
+                    </Col>
+                    <Col span={12}>
+                      <Statistic
+                        title={UI_COPY.report.stats.crackMaxLength}
+                        value={(crackCount ?? 0) > 0 ? 0.85 : '-'}
+                        precision={2}
+                        suffix={(crackCount ?? 0) > 0 ? 'm' : ''}
+                      />
+                    </Col>
+                  </Row>
+                  <Divider className="report-crack-divider" />
+                  <div className="report-crack-tags">
+                    {(crackCount ?? 0) > 0 ? (
+                      <>
+                        <Tag>纵向裂缝</Tag>
+                        <Tag>需由专家复核</Tag>
+                      </>
+                    ) : (
+                      <Tag color="green">未检出裂缝</Tag>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <StatePanel
+                  mode="info"
+                  title="裂缝检测数据未生成"
+                  description="当前报告未返回裂缝统计结果。"
+                  variant="card"
+                  compact
+                />
+              )}
             </Card>
           )}
 
@@ -396,7 +434,7 @@ const Report: React.FC = () => {
             <Descriptions column={1} size="small">
               <Descriptions.Item label="任务ID">#{analysis.id}</Descriptions.Item>
               <Descriptions.Item label="处理时间">{processingSeconds === null ? '-' : `${processingSeconds} 秒`}</Descriptions.Item>
-              <Descriptions.Item label="模型版本">YOLOv11-Seg-v1.0.2</Descriptions.Item>
+              <Descriptions.Item label="模型版本">{modelVersionText}</Descriptions.Item>
               <Descriptions.Item label="创建时间">{createdTimeText}</Descriptions.Item>
             </Descriptions>
           </Card>

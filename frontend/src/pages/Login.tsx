@@ -106,7 +106,7 @@ const Login: React.FC = () => {
       theme={{
         token: {
           borderRadius: 14,
-          controlHeight: 46,
+          controlHeight: 42,
         },
       }}
     >

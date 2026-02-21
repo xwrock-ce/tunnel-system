@@ -8,6 +8,7 @@ import './styles/nature-theme.css'
 import './styles/ui-unified.css'
 import './styles/app-harmony.css'
 import './styles/auth-login.css'
+import './styles/visual-refresh.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -15,44 +16,44 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       locale={zhCN}
       theme={{
         token: {
-          colorPrimary: '#2563eb',
-          colorInfo: '#2563eb',
-          colorSuccess: '#0f9f78',
-          colorWarning: '#c97b16',
-          colorError: '#cc4f59',
+          colorPrimary: '#1f6aa5',
+          colorInfo: '#1f6aa5',
+          colorSuccess: '#2c9d77',
+          colorWarning: '#c8842f',
+          colorError: '#c85a59',
           borderRadius: 12,
-          borderRadiusLG: 18,
+          borderRadiusLG: 16,
           fontFamily:
-            "'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-          colorBgLayout: '#f4f7fb',
-          colorBgContainer: '#ffffff',
+            "'IBM Plex Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          colorBgLayout: '#eaf0f6',
+          colorBgContainer: '#fbfdff',
           colorBgElevated: '#ffffff',
-          colorBorder: '#d9e3ef',
-          colorTextHeading: '#0f172a',
-          colorText: '#334155',
-          colorTextSecondary: '#64748b',
+          colorBorder: '#cfdae7',
+          colorTextHeading: '#10273f',
+          colorText: '#31465c',
+          colorTextSecondary: '#5f748c',
           controlHeight: 40,
-          boxShadowSecondary: '0 18px 34px -24px rgba(15, 23, 42, 0.34)',
+          boxShadowSecondary: '0 20px 36px -28px rgba(15, 36, 58, 0.35)',
         },
         components: {
           Card: {
-            boxShadowTertiary: '0 14px 28px -24px rgba(15, 23, 42, 0.28)',
-            colorBgContainer: '#ffffff',
+            boxShadowTertiary: '0 18px 30px -28px rgba(15, 36, 58, 0.28)',
+            colorBgContainer: '#fbfdff',
             headerFontSize: 16,
-            headerHeight: 58,
+            headerHeight: 56,
           },
           Layout: {
-            siderBg: '#0f172a',
-            headerBg: 'rgba(255, 255, 255, 0.9)',
-            bodyBg: '#f4f7fb',
+            siderBg: '#10253f',
+            headerBg: 'rgba(246, 251, 255, 0.9)',
+            bodyBg: '#eaf0f6',
           },
           Menu: {
             darkItemBg: 'transparent',
-            darkItemColor: '#a6b5c7',
-            darkItemHoverBg: 'rgba(255, 255, 255, 0.1)',
+            darkItemColor: '#a8bdd7',
+            darkItemHoverBg: 'rgba(255, 255, 255, 0.12)',
             darkItemHoverColor: '#f8fbff',
-            darkItemSelectedBg: 'rgba(37, 99, 235, 0.26)',
-            darkItemSelectedColor: '#dbeafe',
+            darkItemSelectedBg: 'rgba(49, 131, 198, 0.36)',
+            darkItemSelectedColor: '#e8f3ff',
             itemBorderRadius: 12,
             itemMarginInline: 10,
           },
@@ -62,27 +63,27 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             borderRadius: 12,
           },
           Input: {
-            activeBorderColor: '#2563eb',
-            hoverBorderColor: '#8eb2e0',
+            activeBorderColor: '#1f6aa5',
+            hoverBorderColor: '#7ea6cb',
           },
           InputNumber: {
-            activeBorderColor: '#2563eb',
-            hoverBorderColor: '#8eb2e0',
+            activeBorderColor: '#1f6aa5',
+            hoverBorderColor: '#7ea6cb',
           },
           Select: {
-            optionSelectedBg: '#eaf2ff',
-            optionActiveBg: '#f3f8ff',
+            optionSelectedBg: '#e7f2fb',
+            optionActiveBg: '#f1f7fd',
           },
           Tabs: {
-            itemColor: '#5a6b80',
-            itemHoverColor: '#2563eb',
-            itemSelectedColor: '#2563eb',
+            itemColor: '#587089',
+            itemHoverColor: '#1f6aa5',
+            itemSelectedColor: '#1f6aa5',
           },
           Table: {
-            headerBg: '#f6f9fe',
-            headerColor: '#5e6f83',
+            headerBg: '#f4f8fc',
+            headerColor: '#576d84',
             headerSplitColor: 'transparent',
-            rowHoverBg: '#f5f9ff',
+            rowHoverBg: '#edf4fb',
           },
         },
       }}

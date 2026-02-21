@@ -56,6 +56,7 @@ const getRgbValue = (hexColor: string): string => {
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -235,13 +236,31 @@ const MainLayout: React.FC = () => {
 
   return (
     <Layout className="app-layout app-theme-harmony" style={layoutThemeStyle}>
+      {isMobile && !collapsed && (
+        <button
+          type="button"
+          className="app-sider-backdrop"
+          aria-label="关闭导航菜单"
+          onClick={() => setCollapsed(true)}
+        />
+      )}
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
+        collapsedWidth={isMobile ? 0 : 80}
         width={260}
         className="app-sider"
         theme="dark"
+        breakpoint="lg"
+        onBreakpoint={(broken) => {
+          setIsMobile(broken)
+          if (broken) {
+            setCollapsed(true)
+          } else {
+            setCollapsed(false)
+          }
+        }}
       >
         <div className="sidebar-logo-container">
           <div className="logo-box">
@@ -262,7 +281,12 @@ const MainLayout: React.FC = () => {
             selectedKeys={[location.pathname]}
             defaultOpenKeys={['/upload', 'work']}
             items={menuItems}
-            onClick={({ key }) => navigate(key)}
+            onClick={({ key }) => {
+              navigate(key)
+              if (isMobile) {
+                setCollapsed(true)
+              }
+            }}
             className="app-menu"
           />
         </div>

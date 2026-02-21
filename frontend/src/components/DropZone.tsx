@@ -178,8 +178,8 @@ const DropZone: React.FC<DropZoneProps> = ({
               支持 JPG、PNG 格式，单个文件最大 {maxSizeMB}MB
             </p>
             <Button
-              type="primary"
-              ghost
+              type="default"
+              className="dropzone-select-btn"
               onClick={handleClick}
               disabled={disabled}
             >

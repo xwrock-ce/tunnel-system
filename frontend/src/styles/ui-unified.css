@@ -43,7 +43,7 @@ body {
   min-height: calc(100vh - 108px);
   overflow-y: auto;
   border: 1px solid var(--ui-border) !important;
-  border-radius: var(--ui-radius-lg) !important;
+  border-radius: 20px !important;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
   box-shadow: var(--ui-shadow-md) !important;
 }
@@ -353,7 +353,7 @@ body {
 }
 
 .realtime-page .realtime-toolbar {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .realtime-page .realtime-toolbar-item.is-warning {
@@ -500,7 +500,7 @@ body {
 }
 
 .upload-page .ant-tabs-content-holder {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .upload-page .card-surface .ant-card-head {
@@ -582,7 +582,7 @@ body {
   margin-top: 16px;
   padding: 12px;
   border: 1px solid #dce5ef;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #fafcff 0%, #f7fafe 100%);
 }
 
@@ -616,7 +616,7 @@ body {
   margin-top: 16px;
   padding: 10px 12px;
   border: 1px solid #d8e4f1;
-  border-radius: 10px;
+  border-radius: 14px;
   background: #f7fbff;
 }
 
@@ -752,7 +752,7 @@ body {
   .app-content {
     margin: 14px 14px 0;
     padding: 14px;
-    border-radius: 14px !important;
+    border-radius: 18px !important;
   }
 
   .header-search-input--wide {
@@ -776,7 +776,7 @@ body {
   .app-content {
     margin: 12px 10px 0;
     padding: 12px;
-    border-radius: 12px !important;
+    border-radius: 16px !important;
   }
 
   .page-header {
@@ -960,7 +960,7 @@ body {
   line-height: 44px;
   margin: 4px 6px;
   padding-inline: 12px !important;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #a9b8cb !important;
   font-weight: 560;
 }
@@ -1014,7 +1014,7 @@ body {
 .app-menu .ant-menu-sub.ant-menu-inline {
   margin: 6px 8px 10px;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   background:
     linear-gradient(180deg, rgba(8, 13, 22, 0.64), rgba(15, 23, 42, 0.8)) !important;
@@ -1025,7 +1025,7 @@ body {
   line-height: 40px;
   margin: 3px 0;
   padding-inline: 12px !important;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .app-menu .ant-menu-sub.ant-menu-inline > .ant-menu-item:hover {
@@ -1047,7 +1047,7 @@ body {
 .sidebar-user-section {
   margin: 6px 10px 0;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
 }
@@ -1157,7 +1157,7 @@ body {
 }
 
 .ant-btn {
-  border-radius: 12px;
+  border-radius: 14px;
   font-weight: 600;
 }
 
@@ -1217,7 +1217,7 @@ body {
 .ant-input-affix-wrapper,
 .ant-input-number,
 .ant-select-selector {
-  border-radius: 11px !important;
+  border-radius: 14px !important;
   border-color: #d7e2ef !important;
   background: #ffffff;
 }
@@ -1335,7 +1335,7 @@ body {
 .realtime-toolbar,
 .dashboard-toolbar {
   border: 1px solid #dbe5f1;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(145deg, #ffffff 0%, #f7faff 100%);
 }
 
@@ -1471,7 +1471,7 @@ body {
 .dashboard-model-card,
 .realtime-model-card,
 .realtime-uptime-card {
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
 .realtime-model-card,
@@ -1535,7 +1535,7 @@ body {
 }
 
 .ant-table {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .ant-table-thead > tr > th {
@@ -1599,7 +1599,7 @@ body {
 }
 
 .ant-alert {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .ant-alert-info {
@@ -1763,9 +1763,9 @@ body {
 }
 
 .project-selector-btn {
-  height: 40px;
+  height: 42px;
   border: 1px solid #d4e1f0;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 255, 0.92) 100%);
   color: #334d68;
 }
@@ -1796,7 +1796,7 @@ body {
 .action-btn,
 .sidebar-toggle-btn {
   color: #5f738a;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
 .action-btn:hover,
@@ -1808,7 +1808,7 @@ body {
 .header-search-input .ant-input-wrapper,
 .header-search-input .ant-input-affix-wrapper {
   border-color: #d6e2f0;
-  border-radius: 10px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
 }
 
@@ -1860,7 +1860,7 @@ body {
   .app-content {
     margin: 12px 12px 0;
     padding: 14px;
-    border-radius: 14px !important;
+    border-radius: 18px !important;
   }
 
   .header-search-input--wide {
@@ -1889,7 +1889,7 @@ body {
   .app-content {
     margin: 10px 10px 0;
     padding: 12px;
-    border-radius: 12px !important;
+    border-radius: 16px !important;
   }
 
   .page-header {
@@ -2078,7 +2078,7 @@ body {
   min-width: 0;
   padding: 14px;
   border: 1px solid #d8e6f6;
-  border-radius: 14px;
+  border-radius: 16px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(244, 249, 255, 0.94) 100%);
   display: flex;
   flex-direction: column;
@@ -2103,7 +2103,7 @@ body {
   width: 100%;
   justify-content: center;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .dashboard-hero-refresh {
@@ -2217,7 +2217,7 @@ body {
   width: 100%;
   padding: 12px;
   border: 1px solid #dce7f5;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
 }
 
@@ -2474,7 +2474,7 @@ body {
 .history-table .ant-table-container,
 .realtime-task-table .ant-table-container {
   border: 1px solid #e0eaf6;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -2989,7 +2989,7 @@ body {
   min-height: 180px;
   padding: 22px 16px;
   border: 1px solid #dce8f6;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   display: flex;
   flex-direction: column;
@@ -3076,7 +3076,7 @@ body {
   padding: 14px 10px;
   border-style: dashed;
   border-color: #d7e5f6;
-  border-radius: 10px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
 }
 
@@ -3191,7 +3191,7 @@ body {
 .dashboard-loading-shell .ant-skeleton-paragraph > li,
 .report-loading-shell .ant-skeleton-title,
 .report-loading-shell .ant-skeleton-paragraph > li {
-  border-radius: 8px;
+  border-radius: 14px;
   background: linear-gradient(90deg, #edf3fb 0%, #e4edf8 50%, #edf3fb 100%);
   background-size: 220% 100%;
   animation: skeletonFlow 1.5s ease-in-out infinite;
