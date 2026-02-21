@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authApi, User, LoginRequest } from '@/api/client'
@@ -34,8 +35,18 @@ export const useAuthStore = create<AuthState>()(
           // Fetch user info
           await get().fetchUser()
           return true
-        } catch (err: any) {
-          const message = err.response?.data?.detail || 'Login failed'
+        } catch (err: unknown) {
+          let message = '登录失败'
+          if (axios.isAxiosError(err)) {
+            const detail = (err.response?.data as { detail?: string } | undefined)?.detail
+            if (detail) {
+              message = detail
+            } else if (err.code === 'ERR_NETWORK') {
+              message = '无法连接后端服务，请确认后端已启动（默认 http://localhost:8000）'
+            } else if (err.response?.status === 401) {
+              message = '用户名或密码错误'
+            }
+          }
           set({ error: message, isLoading: false })
           return false
         }

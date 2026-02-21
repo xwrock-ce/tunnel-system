@@ -10,26 +10,28 @@ import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
 import StatePanel from '@/components/feedback/StatePanel'
+import { useUploadFiles } from '@/hooks/useUploadFiles'
 import { UI_COPY } from '@/constants/uiCopy'
 
 const { Title, Text } = Typography
 
 type UploadMode = 'single' | 'batch'
 
-interface SelectedFile {
-  file: File
-  name: string
-  previewUrl?: string
-}
-
 const Upload_Page: React.FC = () => {
   const navigate = useNavigate()
   const [mode, setMode] = useState<UploadMode>('single')
-  const [singleFile, setSingleFile] = useState<SelectedFile | null>(null)
-  const [batchFiles, setBatchFiles] = useState<SelectedFile[]>([])
   const [batchTaskIds, setBatchTaskIds] = useState<number[] | null>(null)
   const [form] = Form.useForm()
   const analysisDefaults = useAppSettingsStore((s) => s.analysisDefaults)
+  const {
+    singleFile,
+    batchFiles,
+    handleSingleFileSelected,
+    handleBatchFilesSelected,
+    clearSingleFile,
+    clearBatchFiles,
+    removeBatchFile,
+  } = useUploadFiles()
 
   const {
     currentAnalysis,
@@ -48,40 +50,6 @@ const Upload_Page: React.FC = () => {
       scale: analysisDefaults.scale,
     })
   }, [analysisDefaults.designArea, analysisDefaults.scale, form, isAnalyzing])
-
-  // Cleanup preview URLs on unmount or file change
-  useEffect(() => {
-    return () => {
-      if (singleFile?.previewUrl) {
-        URL.revokeObjectURL(singleFile.previewUrl)
-      }
-    }
-  }, [singleFile])
-
-  // Cleanup batch preview URLs
-  useEffect(() => {
-    return () => {
-      batchFiles.forEach(f => {
-        if (f.previewUrl) URL.revokeObjectURL(f.previewUrl)
-      })
-    }
-  }, [batchFiles])
-
-  const handleSingleFileSelected = (files: File[]) => {
-    const file = files[0]
-    if (file) {
-      const previewUrl = URL.createObjectURL(file)
-      setSingleFile({ file, name: file.name, previewUrl })
-    }
-  }
-
-  const handleBatchFilesSelected = (files: File[]) => {
-    const newFiles: SelectedFile[] = files.map(file => ({
-      file,
-      name: file.name,
-    }))
-    setBatchFiles(prev => [...prev, ...newFiles].slice(0, 50))
-  }
 
   const handleSingleUpload = async () => {
     if (!singleFile) {
@@ -111,27 +79,17 @@ const Upload_Page: React.FC = () => {
   }
 
   const handleResetSingle = () => {
-    if (singleFile?.previewUrl) {
-      URL.revokeObjectURL(singleFile.previewUrl)
-    }
-    setSingleFile(null)
+    clearSingleFile()
     clearCurrent()
   }
 
   const handleResetBatch = () => {
-    batchFiles.forEach(f => {
-      if (f.previewUrl) URL.revokeObjectURL(f.previewUrl)
-    })
-    setBatchFiles([])
+    clearBatchFiles()
     setBatchTaskIds(null)
   }
 
   const handleRemoveBatchFile = (index: number) => {
-    setBatchFiles(prev => {
-      const removed = prev[index]
-      if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl)
-      return prev.filter((_, i) => i !== index)
-    })
+    removeBatchFile(index)
   }
 
   const getStatusTag = (status: string) => {

@@ -317,6 +317,13 @@
   margin-bottom: 16px;
 }
 
+.login-v4__backend-alert {
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border-color: rgba(226, 173, 66, 0.35);
+  background: rgba(255, 248, 232, 0.85);
+}
+
 .login-v4__form .ant-form-item-label > label {
   color: #3b5574;
   font-size: 13px;

@@ -41,6 +41,33 @@ check_and_fix_proxy() {
 
 check_and_fix_proxy
 
+# Detect an available backend port (default 8000, auto-bump if busy)
+is_port_in_use() {
+    local port="$1"
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -iTCP:"$port" -sTCP:LISTEN -n -P >/dev/null 2>&1
+        return $?
+    fi
+    if command -v ss >/dev/null 2>&1; then
+        ss -ltn | grep -Eq ":${port}(\\s|$)"
+        return $?
+    fi
+    return 1
+}
+
+BACKEND_PORT="${PORT:-8000}"
+if is_port_in_use "$BACKEND_PORT"; then
+    if [ -n "${PORT:-}" ]; then
+        echo "ERROR: PORT $BACKEND_PORT is already in use."
+        exit 1
+    fi
+    BACKEND_PORT=8001
+    while is_port_in_use "$BACKEND_PORT"; do
+        BACKEND_PORT=$((BACKEND_PORT + 1))
+    done
+    echo "WARNING: port 8000 is already in use, switching backend to $BACKEND_PORT."
+fi
+
 # Check model weights (non-blocking)
 MODEL_DIR="$PROJECT_DIR/model_weights"
 YOLO_WEIGHTS_FILE="yolo_best.pt"
@@ -136,10 +163,10 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Start backend
-echo "Starting backend on http://localhost:8000..."
+echo "Starting backend on http://localhost:$BACKEND_PORT..."
 cd backend
 source .venv/bin/activate
-ANALYZER_MODE="${ANALYZER_MODE:-python}" go run ./cmd/server &
+PORT="$BACKEND_PORT" ANALYZER_MODE="${ANALYZER_MODE:-python}" go run ./cmd/server &
 BACKEND_PID=$!
 cd ..
 
@@ -149,14 +176,14 @@ sleep 3
 # Start frontend
 echo "Starting frontend on http://localhost:3000..."
 cd frontend
-npm run dev &
+VITE_API_URL="${VITE_API_URL:-http://localhost:$BACKEND_PORT}" npm run dev &
 FRONTEND_PID=$!
 cd ..
 
 echo ""
 echo "=== Services Started ==="
 echo "Frontend: http://localhost:3000"
-echo "Backend:  http://localhost:8000"
+echo "Backend:  http://localhost:$BACKEND_PORT"
 echo ""
 echo "Press Ctrl+C to stop all services"
 

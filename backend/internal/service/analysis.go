@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -409,22 +408,4 @@ func (s *AnalysisService) GetDeviationDistribution(userID uint) (Distribution, e
 		}
 	}
 	return d, nil
-}
-
-func (s *AnalysisService) CleanupUnusedFiles(uploadDir string, keep map[string]struct{}) error {
-	entries, err := os.ReadDir(uploadDir)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		fullPath := filepath.Join(uploadDir, entry.Name())
-		if _, ok := keep[fullPath]; ok {
-			continue
-		}
-	}
-	return nil
 }

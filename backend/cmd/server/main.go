@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -44,8 +45,17 @@ func main() {
 	analysisService := service.NewAnalysisService(database, cfg, analysisEngine, hub)
 	server := api.NewServer(cfg, database, authManager, analysisService, hub, analysisEngine)
 
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "8000"
+	}
+	addr := port
+	if !strings.HasPrefix(addr, ":") {
+		addr = ":" + addr
+	}
+
 	httpServer := &http.Server{
-		Addr:              ":8000",
+		Addr:              addr,
 		Handler:           server.Router(),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
@@ -56,6 +66,7 @@ func main() {
 	go func() {
 		fmt.Printf("Starting %s v%s\n", cfg.AppName, cfg.AppVersion)
 		fmt.Printf("Analyzer mode: %s\n", cfg.AnalyzerMode)
+		fmt.Printf("Listening on http://localhost:%s\n", strings.TrimPrefix(addr, ":"))
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(fmt.Errorf("listen and serve: %w", err))
 		}

@@ -72,6 +72,8 @@ func (s *Server) Router() http.Handler {
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir(s.cfg.StaticDir))))
 
 	r.Route(s.cfg.APIV1Prefix, func(r chi.Router) {
+		r.Get("/health", s.handleHealth)
+
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/login", s.handleLogin)
 			r.Post("/token", s.handleToken)
@@ -215,44 +217,12 @@ func (s *Server) handleCreateAnalysis(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	designArea := s.cfg.DesignAreaM2
-	if value := strings.TrimSpace(r.FormValue("design_area")); value != "" {
-		parsed, parseErr := strconv.ParseFloat(value, 64)
-		if parseErr != nil {
-			writeDetailError(w, http.StatusBadRequest, "design_area must be a number")
-			return
-		}
-		designArea = parsed
-	}
-	if designArea <= 0 {
-		writeDetailError(w, http.StatusBadRequest, "design_area must be > 0")
+	analysisInput, ok := s.parseAnalysisInput(w, r)
+	if !ok {
 		return
 	}
 
-	scale := s.cfg.ScaleMMPerPixel
-	if value := strings.TrimSpace(r.FormValue("scale")); value != "" {
-		parsed, parseErr := strconv.ParseFloat(value, 64)
-		if parseErr != nil {
-			writeDetailError(w, http.StatusBadRequest, "scale must be a number")
-			return
-		}
-		scale = parsed
-	}
-	if scale <= 0 {
-		writeDetailError(w, http.StatusBadRequest, "scale must be > 0")
-		return
-	}
-
-	analysisType := strings.TrimSpace(r.FormValue("analysis_type"))
-	if analysisType == "" {
-		analysisType = models.AnalysisTypeFull
-	}
-	if !isValidAnalysisType(analysisType) {
-		writeDetailError(w, http.StatusBadRequest, "Invalid analysis_type. Must be one of: [face_segmentation crack_detection full]")
-		return
-	}
-
-	analysisRecord, err := s.analysisService.CreateAnalysis(user.ID, "", designArea, scale, analysisType)
+	analysisRecord, err := s.analysisService.CreateAnalysis(user.ID, "", analysisInput.designArea, analysisInput.scale, analysisInput.analysisType)
 	if err != nil {
 		writeDetailError(w, http.StatusInternalServerError, "Failed to create analysis")
 		return
@@ -300,40 +270,8 @@ func (s *Server) handleCreateBatchAnalysis(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	designArea := s.cfg.DesignAreaM2
-	if value := strings.TrimSpace(r.FormValue("design_area")); value != "" {
-		parsed, parseErr := strconv.ParseFloat(value, 64)
-		if parseErr != nil {
-			writeDetailError(w, http.StatusBadRequest, "design_area must be a number")
-			return
-		}
-		designArea = parsed
-	}
-	if designArea <= 0 {
-		writeDetailError(w, http.StatusBadRequest, "design_area must be > 0")
-		return
-	}
-
-	scale := s.cfg.ScaleMMPerPixel
-	if value := strings.TrimSpace(r.FormValue("scale")); value != "" {
-		parsed, parseErr := strconv.ParseFloat(value, 64)
-		if parseErr != nil {
-			writeDetailError(w, http.StatusBadRequest, "scale must be a number")
-			return
-		}
-		scale = parsed
-	}
-	if scale <= 0 {
-		writeDetailError(w, http.StatusBadRequest, "scale must be > 0")
-		return
-	}
-
-	analysisType := strings.TrimSpace(r.FormValue("analysis_type"))
-	if analysisType == "" {
-		analysisType = models.AnalysisTypeFull
-	}
-	if !isValidAnalysisType(analysisType) {
-		writeDetailError(w, http.StatusBadRequest, "Invalid analysis_type. Must be one of: [face_segmentation crack_detection full]")
+	analysisInput, ok := s.parseAnalysisInput(w, r)
+	if !ok {
 		return
 	}
 
@@ -345,7 +283,7 @@ func (s *Server) handleCreateBatchAnalysis(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		analysisRecord, err := s.analysisService.CreateAnalysis(user.ID, "", designArea, scale, analysisType)
+		analysisRecord, err := s.analysisService.CreateAnalysis(user.ID, "", analysisInput.designArea, analysisInput.scale, analysisInput.analysisType)
 		if err != nil {
 			writeDetailError(w, http.StatusInternalServerError, "Failed to create analysis")
 			return
@@ -763,6 +701,57 @@ func parseQueryInt(r *http.Request, key string, fallback int) int {
 		return fallback
 	}
 	return parsed
+}
+
+type analysisFormInput struct {
+	designArea   float64
+	scale        float64
+	analysisType string
+}
+
+func (s *Server) parseAnalysisInput(w http.ResponseWriter, r *http.Request) (analysisFormInput, bool) {
+	designArea := s.cfg.DesignAreaM2
+	if value := strings.TrimSpace(r.FormValue("design_area")); value != "" {
+		parsed, parseErr := strconv.ParseFloat(value, 64)
+		if parseErr != nil {
+			writeDetailError(w, http.StatusBadRequest, "design_area must be a number")
+			return analysisFormInput{}, false
+		}
+		designArea = parsed
+	}
+	if designArea <= 0 {
+		writeDetailError(w, http.StatusBadRequest, "design_area must be > 0")
+		return analysisFormInput{}, false
+	}
+
+	scale := s.cfg.ScaleMMPerPixel
+	if value := strings.TrimSpace(r.FormValue("scale")); value != "" {
+		parsed, parseErr := strconv.ParseFloat(value, 64)
+		if parseErr != nil {
+			writeDetailError(w, http.StatusBadRequest, "scale must be a number")
+			return analysisFormInput{}, false
+		}
+		scale = parsed
+	}
+	if scale <= 0 {
+		writeDetailError(w, http.StatusBadRequest, "scale must be > 0")
+		return analysisFormInput{}, false
+	}
+
+	analysisType := strings.TrimSpace(r.FormValue("analysis_type"))
+	if analysisType == "" {
+		analysisType = models.AnalysisTypeFull
+	}
+	if !isValidAnalysisType(analysisType) {
+		writeDetailError(w, http.StatusBadRequest, "Invalid analysis_type. Must be one of: [face_segmentation crack_detection full]")
+		return analysisFormInput{}, false
+	}
+
+	return analysisFormInput{
+		designArea:   designArea,
+		scale:        scale,
+		analysisType: analysisType,
+	}, true
 }
 
 func saveUploadedFile(path string, source io.Reader) error {

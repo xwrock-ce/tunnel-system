@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Form, Input, Button, Checkbox, message, Typography, theme, ConfigProvider } from 'antd'
+import { Form, Input, Button, Checkbox, message, Typography, theme, ConfigProvider, Alert } from 'antd'
 import { useAuthStore } from '@/stores/useAuthStore'
 import {
   UserOutlined,
@@ -12,6 +12,7 @@ import {
   CheckCircleFilled,
 } from '@ant-design/icons'
 import LoginPortalIcon from '@/components/icons/LoginPortalIcon'
+import { API_BASE_URL } from '@/api/client'
 
 const { Title, Text } = Typography
 
@@ -69,6 +70,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate()
   const { login, isLoading, error, clearError, token } = useAuthStore()
   const [form] = Form.useForm()
+  const [backendStatus, setBackendStatus] = useState<'unknown' | 'ok' | 'down'>('unknown')
+  const apiBaseLabel = API_BASE_URL || 'http://localhost:8000'
   const {
     token: { colorPrimary },
   } = theme.useToken()
@@ -86,12 +89,54 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      message.error(error)
+      message.open({
+        type: 'error',
+        content: error,
+        key: 'login-error',
+      })
       clearError()
     }
   }, [error, clearError])
 
+  useEffect(() => {
+    let active = true
+
+    const checkBackend = async () => {
+      try {
+        const base = API_BASE_URL || ''
+        const response = await fetch(`${base}/api/v1/health`, { cache: 'no-store' })
+        if (!response.ok) {
+          throw new Error('healthcheck failed')
+        }
+        if (active) {
+          setBackendStatus('ok')
+        }
+      } catch {
+        if (active) {
+          setBackendStatus('down')
+        }
+      }
+    }
+
+    checkBackend()
+    const timer = window.setInterval(checkBackend, 10000)
+
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [])
+
   const onFinish = async (values: { username: string; password: string }) => {
+    if (backendStatus === 'down') {
+      message.open({
+        type: 'warning',
+        content: `后端服务未连接，请先启动后端（当前 ${apiBaseLabel}）`,
+        key: 'backend-down',
+      })
+      return
+    }
+
     const success = await login(values)
     if (success) {
       message.success('登录成功')
@@ -190,6 +235,16 @@ const Login: React.FC = () => {
                 requiredMark={false}
                 className="login-v4__form"
               >
+                {backendStatus === 'down' && (
+                  <Alert
+                    type="warning"
+                    showIcon
+                    className="login-v4__backend-alert"
+                    message="后端服务未连接"
+                    description={`请先启动后端服务（当前 ${apiBaseLabel}）`}
+                  />
+                )}
+
                 <Form.Item name="username" label="账号" rules={[{ required: true, message: '请输入用户名' }]}>
                   <Input
                     prefix={<UserOutlined className="login-v4__input-icon" />}
@@ -222,6 +277,7 @@ const Login: React.FC = () => {
                     type="primary"
                     htmlType="submit"
                     loading={isLoading}
+                    disabled={isLoading || backendStatus === 'down'}
                     block
                     size="large"
                     className="login-v4__submit"
