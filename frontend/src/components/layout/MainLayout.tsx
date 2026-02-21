@@ -357,7 +357,7 @@ const MainLayout: React.FC = () => {
                        placeholder="全局搜索分析记录..."
                        allowClear
                        onSearch={handleSearch}
-                       bordered={false}
+                       variant="borderless"
                        className="header-search-input header-search-input--wide"
                        enterButton={false}
                     />

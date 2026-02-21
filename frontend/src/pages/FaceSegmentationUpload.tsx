@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Card, Button, Form, InputNumber, Progress, Row, Col,
-  Typography, Image, Tag, Descriptions, Divider, message, Space, Tabs, Alert
+  Typography, Image, Descriptions, Divider, message, Space, Tabs, Alert
 } from 'antd'
 import { ReloadOutlined, FileSearchOutlined, HistoryOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,7 @@ import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
+import ExcavationStatusTag from '@/components/ExcavationStatusTag'
 import StatePanel from '@/components/feedback/StatePanel'
 import { useUploadFiles } from '@/hooks/useUploadFiles'
 import { UI_COPY } from '@/constants/uiCopy'
@@ -107,19 +108,6 @@ const FaceSegmentationUpload: React.FC = () => {
     removeBatchFile(index)
   }
 
-  const getStatusTag = (status: string) => {
-    switch (status) {
-      case 'over_excavation':
-        return <Tag color="red">超挖</Tag>
-      case 'under_excavation':
-        return <Tag color="orange">欠挖</Tag>
-      case 'within_tolerance':
-        return <Tag color="green">合格</Tag>
-      default:
-        return <Tag>{status}</Tag>
-    }
-  }
-
   return (
     <div className="upload-page">
       <div className="page-header">
@@ -158,7 +146,9 @@ const FaceSegmentationUpload: React.FC = () => {
                 title={
                   <Space>
                     <span>{UI_COPY.upload.face.resultCardTitle}</span>
-                    {currentAnalysis.excavation && getStatusTag(currentAnalysis.excavation.status)}
+                    {currentAnalysis.excavation && (
+                      <ExcavationStatusTag status={currentAnalysis.excavation.status} />
+                    )}
                   </Space>
                 }
                 extra={

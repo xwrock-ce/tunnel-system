@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
         </Title>
       </div>
 
-      <Card title="系统信息" bordered={false} className="card-surface settings-card-spacing">
+      <Card title="系统信息" variant="borderless" className="card-surface settings-card-spacing">
         <Descriptions bordered column={1}>
           <Descriptions.Item label="系统版本">
             <Tag color="blue">v1.1.0</Tag>
@@ -58,7 +58,7 @@ const Settings: React.FC = () => {
 
       <Card
         title="分析默认参数"
-        bordered={false}
+        variant="borderless"
         className="card-surface"
         extra={
           <Space className="settings-card-actions" wrap>
@@ -99,7 +99,7 @@ const Settings: React.FC = () => {
 
       <Divider />
 
-      <Card title="使用说明" bordered={false} className="card-surface">
+      <Card title="使用说明" variant="borderless" className="card-surface">
         <Paragraph>
           <Text strong>1. 上传分析</Text>
           <br />

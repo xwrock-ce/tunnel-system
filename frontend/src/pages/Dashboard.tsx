@@ -276,7 +276,7 @@ const Dashboard: React.FC = () => {
         <Row gutter={[16, 16]}>
           {Array.from({ length: 4 }).map((_, index) => (
             <Col xs={24} sm={12} lg={6} key={`dashboard-skeleton-kpi-${index}`}>
-              <Card bordered={false} className="kpi-card dashboard-loading-card">
+              <Card variant="borderless" className="kpi-card dashboard-loading-card">
                 <Skeleton active title={{ width: '52%' }} paragraph={{ rows: 2 }} />
               </Card>
             </Col>
@@ -285,12 +285,12 @@ const Dashboard: React.FC = () => {
 
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={16}>
-            <Card bordered={false} className="kpi-card dashboard-loading-chart">
+            <Card variant="borderless" className="kpi-card dashboard-loading-chart">
               <Skeleton active title={{ width: '42%' }} paragraph={{ rows: 6 }} />
             </Card>
           </Col>
           <Col xs={24} lg={8}>
-            <Card bordered={false} className="kpi-card dashboard-loading-chart">
+            <Card variant="borderless" className="kpi-card dashboard-loading-chart">
               <Skeleton active title={{ width: '50%' }} paragraph={{ rows: 6 }} />
             </Card>
           </Col>
@@ -485,7 +485,7 @@ const Dashboard: React.FC = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--primary">
+          <Card variant="borderless" className="kpi-card dashboard-kpi-card dashboard-kpi-card--primary">
             <div className="dashboard-kpi-head">
               <div className="dashboard-kpi-label">今日分析样本</div>
               <span className="dashboard-kpi-icon dashboard-kpi-icon--primary">
@@ -520,7 +520,7 @@ const Dashboard: React.FC = () => {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--alert dashboard-kpi-card--danger">
+          <Card variant="borderless" className="kpi-card dashboard-kpi-card dashboard-kpi-card--alert dashboard-kpi-card--danger">
             <div className="dashboard-kpi-head">
               <div className="dashboard-kpi-label">超欠挖异常</div>
               <span className="dashboard-kpi-icon dashboard-kpi-icon--danger">
@@ -541,7 +541,7 @@ const Dashboard: React.FC = () => {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--accent">
+          <Card variant="borderless" className="kpi-card dashboard-kpi-card dashboard-kpi-card--accent">
             <div className="dashboard-kpi-head">
               <div className="dashboard-kpi-label">平均开挖偏差</div>
               <span className="dashboard-kpi-icon dashboard-kpi-icon--accent">
@@ -570,7 +570,7 @@ const Dashboard: React.FC = () => {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="kpi-card dashboard-kpi-card dashboard-kpi-card--success">
+          <Card variant="borderless" className="kpi-card dashboard-kpi-card dashboard-kpi-card--success">
             <div className="dashboard-kpi-head">
               <div className="dashboard-kpi-label">系统合格率</div>
               <span className="dashboard-kpi-icon dashboard-kpi-icon--success">
@@ -593,7 +593,7 @@ const Dashboard: React.FC = () => {
 
       <Row gutter={[16, 16]} className="dashboard-section-row">
         <Col xs={24} lg={16}>
-          <Card bordered={false} className="kpi-card dashboard-chart-card">
+          <Card variant="borderless" className="kpi-card dashboard-chart-card">
             <div className="dashboard-chart-head">
               <div>
                 <h3 className="dashboard-card-title">超欠挖变化 (按分析序列)</h3>
@@ -651,7 +651,7 @@ const Dashboard: React.FC = () => {
 
         <Col xs={24} lg={8}>
           <Card
-            bordered={false}
+            variant="borderless"
             className="kpi-card dashboard-distribution-card dashboard-distribution-card--full"
           >
             <div className="dashboard-distribution-head">
@@ -747,7 +747,7 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Card bordered={false} className="kpi-card dashboard-table-card dashboard-table-card--latest">
+      <Card variant="borderless" className="kpi-card dashboard-table-card dashboard-table-card--latest">
         <div className="dashboard-table-head">
           <h3 className="dashboard-card-title dashboard-card-title--small">最新分析序列</h3>
           <Button size="small" type="text" icon={<HistoryOutlined />} onClick={() => navigate('/history')}>

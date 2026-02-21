@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Card, Button, Form, InputNumber, Progress, Row, Col,
-  Typography, Image, Tag, Descriptions, Divider, message, Space, Tabs
+  Typography, Image, Descriptions, Divider, message, Space, Tabs
 } from 'antd'
 import { ReloadOutlined, FileSearchOutlined, HistoryOutlined, DeleteOutlined, PaperClipOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,7 @@ import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore'
 import { analysisApi } from '@/api/client'
 import DropZone from '@/components/DropZone'
+import ExcavationStatusTag from '@/components/ExcavationStatusTag'
 import StatePanel from '@/components/feedback/StatePanel'
 import { useUploadFiles } from '@/hooks/useUploadFiles'
 import { UI_COPY } from '@/constants/uiCopy'
@@ -92,19 +93,6 @@ const Upload_Page: React.FC = () => {
     removeBatchFile(index)
   }
 
-  const getStatusTag = (status: string) => {
-    switch (status) {
-      case 'over_excavation':
-        return <Tag color="red">超挖</Tag>
-      case 'under_excavation':
-        return <Tag color="orange">欠挖</Tag>
-      case 'within_tolerance':
-        return <Tag color="green">合格</Tag>
-      default:
-        return <Tag>{status}</Tag>
-    }
-  }
-
   return (
     <div className="upload-page">
       <div className="page-header">
@@ -127,7 +115,9 @@ const Upload_Page: React.FC = () => {
                 title={
                   <Space>
                     <span>{UI_COPY.upload.shared.resultCardTitle}</span>
-                    {currentAnalysis.excavation && getStatusTag(currentAnalysis.excavation.status)}
+                    {currentAnalysis.excavation && (
+                      <ExcavationStatusTag status={currentAnalysis.excavation.status} />
+                    )}
                   </Space>
                 }
                 extra={
@@ -144,7 +134,7 @@ const Upload_Page: React.FC = () => {
                     </Button>
                   </Space>
                 }
-                bordered={false}
+                variant="borderless"
                 className="card-surface"
               >
                 {currentAnalysis.status === 'completed' && currentAnalysis.excavation ? (
@@ -275,7 +265,7 @@ const Upload_Page: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title={UI_COPY.upload.shared.cards.singleImage} bordered={false} className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.shared.cards.singleImage} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleSingleFileSelected}
                       disabled={isAnalyzing}
@@ -317,7 +307,7 @@ const Upload_Page: React.FC = () => {
                 <Col xs={24} lg={8}>
                   <Card
                     title={UI_COPY.upload.shared.cards.config}
-                    bordered={false}
+                    variant="borderless"
                     className="card-surface upload-config-card"
                     extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                   >
@@ -358,7 +348,7 @@ const Upload_Page: React.FC = () => {
             key: 'batch',
             label: UI_COPY.upload.shared.tabs.batch,
             children: batchTaskIds ? (
-              <Card bordered={false} className="card-surface">
+              <Card variant="borderless" className="card-surface">
                 <StatePanel
                   mode="info"
                   title={UI_COPY.upload.batchStarted.title}
@@ -377,7 +367,7 @@ const Upload_Page: React.FC = () => {
             ) : (
               <Row gutter={24}>
                 <Col xs={24} lg={16}>
-                  <Card title={UI_COPY.upload.shared.cards.batchImages} bordered={false} className="card-surface upload-workspace-card">
+                  <Card title={UI_COPY.upload.shared.cards.batchImages} variant="borderless" className="card-surface upload-workspace-card">
                     <DropZone
                       onFilesSelected={handleBatchFilesSelected}
                       multiple
@@ -433,7 +423,7 @@ const Upload_Page: React.FC = () => {
                 <Col xs={24} lg={8}>
                   <Card
                     title={UI_COPY.upload.shared.cards.config}
-                    bordered={false}
+                    variant="borderless"
                     className="card-surface upload-config-card"
                     extra={<Text type="secondary" className="upload-config-extra-note">{UI_COPY.upload.shared.configNote}</Text>}
                   >

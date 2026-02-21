@@ -417,7 +417,7 @@ const RealTimeData: React.FC = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card realtime-kpi-card">
+          <Card variant="borderless" className="kpi-card realtime-kpi-card">
             <div className="realtime-kpi-label">活跃任务</div>
             <div className="realtime-kpi-value-row">
               <span className="realtime-kpi-value">{totalActive}</span>
@@ -428,7 +428,7 @@ const RealTimeData: React.FC = () => {
         </Col>
 
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card realtime-kpi-card realtime-kpi-card--processing">
+          <Card variant="borderless" className="kpi-card realtime-kpi-card realtime-kpi-card--processing">
             <div className="realtime-kpi-label">处理中</div>
             <div className="realtime-kpi-value-row">
               <span className="realtime-kpi-value realtime-kpi-value--processing">{processingCount}</span>
@@ -439,7 +439,7 @@ const RealTimeData: React.FC = () => {
         </Col>
 
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="kpi-card realtime-kpi-card">
+          <Card variant="borderless" className="kpi-card realtime-kpi-card">
             <div className="realtime-kpi-label">等待队列</div>
             <div className="realtime-kpi-value-row">
               <span className="realtime-kpi-value">{pendingCount}</span>
@@ -452,7 +452,7 @@ const RealTimeData: React.FC = () => {
 
       <Row gutter={[16, 16]} className="realtime-main-row">
         <Col xs={24} lg={16}>
-          <Card bordered={false} className="kpi-card realtime-task-card">
+          <Card variant="borderless" className="kpi-card realtime-task-card">
             <div className="realtime-card-head">
               <h3 className="realtime-card-title">活跃分析任务</h3>
               <span className="status-badge neutral realtime-card-badge">每 5 秒自动刷新</span>
@@ -502,7 +502,7 @@ const RealTimeData: React.FC = () => {
 
         <Col xs={24} lg={8}>
           <Card
-            bordered={false}
+            variant="borderless"
             className="kpi-card realtime-system-card realtime-system-card--full"
           >
             <div className="realtime-card-head realtime-card-head--compact">

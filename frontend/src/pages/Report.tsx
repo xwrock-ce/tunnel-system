@@ -17,6 +17,7 @@ import {
 import dayjs from 'dayjs'
 import { analysisApi, AnalysisResponse } from '@/api/client'
 import ImageComparison, { type ImageComparisonHeight } from '@/components/ImageComparison'
+import ExcavationStatusTag from '@/components/ExcavationStatusTag'
 import StatePanel from '@/components/feedback/StatePanel'
 import { UI_COPY } from '@/constants/uiCopy'
 
@@ -58,19 +59,19 @@ const Report: React.FC = () => {
 
         <Row gutter={[24, 24]}>
           <Col xs={24} xl={16}>
-            <Card bordered={false} className="card-surface report-loading-card">
+            <Card variant="borderless" className="card-surface report-loading-card">
               <Skeleton active title={{ width: '46%' }} paragraph={{ rows: 8 }} />
             </Card>
-            <Card bordered={false} className="card-surface report-loading-card report-card-spacing">
+            <Card variant="borderless" className="card-surface report-loading-card report-card-spacing">
               <Skeleton active title={{ width: '34%' }} paragraph={{ rows: 6 }} />
             </Card>
           </Col>
 
           <Col xs={24} xl={8}>
-            <Card bordered={false} className="card-surface report-loading-card">
+            <Card variant="borderless" className="card-surface report-loading-card">
               <Skeleton active title={{ width: '52%' }} paragraph={{ rows: 6 }} />
             </Card>
-            <Card bordered={false} className="card-surface report-loading-card report-card-spacing">
+            <Card variant="borderless" className="card-surface report-loading-card report-card-spacing">
               <Skeleton active title={{ width: '48%' }} paragraph={{ rows: 4 }} />
             </Card>
           </Col>
@@ -116,19 +117,6 @@ const Report: React.FC = () => {
         className="report-loading"
       />
     )
-  }
-
-  const getStatusTag = (status: string) => {
-    switch (status) {
-      case 'over_excavation':
-        return <Tag color="error" className="report-status-tag">超挖异常</Tag>
-      case 'under_excavation':
-        return <Tag color="warning" className="report-status-tag">欠挖异常</Tag>
-      case 'within_tolerance':
-        return <Tag color="success" className="report-status-tag">合格</Tag>
-      default:
-        return <Tag>{status}</Tag>
-    }
   }
 
   const excavation = analysis.excavation
@@ -254,7 +242,13 @@ const Report: React.FC = () => {
           <div>
             <div className="report-title-row">
               <Title level={4} className="page-title">{UI_COPY.report.header.titlePrefix}{analysis.id}</Title>
-              {excavation && getStatusTag(excavation.status)}
+              {excavation && (
+                <ExcavationStatusTag
+                  status={excavation.status}
+                  variant="report"
+                  className="report-status-tag"
+                />
+              )}
             </div>
             <Text type="secondary" className="report-subtitle">
               <EnvironmentOutlined /> 隧道掌子面里程桩号: K12+{analysis.id.toString().padStart(3, '0')} (模拟数据)
@@ -293,7 +287,7 @@ const Report: React.FC = () => {
         <Col xs={24} xl={16}>
           <Card
             title={UI_COPY.report.cards.visual}
-            bordered={false}
+            variant="borderless"
             className="shadow-card card-surface"
           >
             {comparisonItems.length > 0 ? (
@@ -317,7 +311,7 @@ const Report: React.FC = () => {
 
           <Card
             title={<><ExperimentOutlined /> 地质特征参数 (Geological Parameters)</>}
-            bordered={false}
+            variant="borderless"
             className="card-surface report-card-spacing"
           >
             <Descriptions bordered size="small" column={{ xs: 1, sm: 2, md: 3 }}>
@@ -348,7 +342,7 @@ const Report: React.FC = () => {
 
         <Col xs={24} xl={8}>
           {excavation && (
-            <Card title={UI_COPY.report.cards.excavationMetrics} bordered={false} className="card-surface report-sidebar-card">
+            <Card title={UI_COPY.report.cards.excavationMetrics} variant="borderless" className="card-surface report-sidebar-card">
               <div className="report-stat-summary">
                 <Statistic
                   title={UI_COPY.report.stats.excavationDeviation}
@@ -390,7 +384,7 @@ const Report: React.FC = () => {
           )}
 
           {showCrack && (
-            <Card title={UI_COPY.report.cards.crackMetrics} bordered={false} className="card-surface report-crack-card">
+            <Card title={UI_COPY.report.cards.crackMetrics} variant="borderless" className="card-surface report-crack-card">
               {hasCrackMetrics ? (
                 <>
                   <Row gutter={16} className="report-crack-stats">
@@ -430,7 +424,7 @@ const Report: React.FC = () => {
             </Card>
           )}
 
-          <Card size="small" title={UI_COPY.report.cards.metadata} bordered={false} className="card-surface report-meta-card">
+          <Card size="small" title={UI_COPY.report.cards.metadata} variant="borderless" className="card-surface report-meta-card">
             <Descriptions column={1} size="small">
               <Descriptions.Item label="任务ID">#{analysis.id}</Descriptions.Item>
               <Descriptions.Item label="处理时间">{processingSeconds === null ? '-' : `${processingSeconds} 秒`}</Descriptions.Item>

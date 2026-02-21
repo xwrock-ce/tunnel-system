@@ -8,6 +8,7 @@ import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { AnalysisListItem } from '@/api/client'
+import ExcavationStatusTag from '@/components/ExcavationStatusTag'
 import StatePanel from '@/components/feedback/StatePanel'
 import { UI_COPY } from '@/constants/uiCopy'
 
@@ -129,19 +130,6 @@ const History: React.FC = () => {
     })
   }
 
-  const getStatusTag = (status: string | undefined) => {
-    switch (status) {
-      case 'over_excavation':
-        return <Tag color="red">{UI_COPY.history.filters.over}</Tag>
-      case 'under_excavation':
-        return <Tag color="orange">{UI_COPY.history.filters.under}</Tag>
-      case 'within_tolerance':
-        return <Tag color="green">{UI_COPY.history.filters.normal}</Tag>
-      default:
-        return <Tag color="default">-</Tag>
-    }
-  }
-
   const getAnalysisStatusTag = (status: string) => {
     switch (status) {
       case 'completed':
@@ -205,7 +193,7 @@ const History: React.FC = () => {
       title: '超欠挖状态',
       dataIndex: 'excavation_status',
       width: 120,
-      render: (status) => getStatusTag(status),
+      render: (status) => <ExcavationStatusTag status={status} variant="history" />,
     },
     {
       title: '实际面积',
@@ -361,7 +349,7 @@ const History: React.FC = () => {
         </div>
       </div>
 
-      <Card bordered={false} className="card-surface data-table-card">
+      <Card variant="borderless" className="card-surface data-table-card">
         <Table
           columns={columns}
           dataSource={analyses}
