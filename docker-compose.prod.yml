@@ -22,6 +22,9 @@ services:
       - tunnel_db:/app/backend/data
     environment:
       - BASE_DIR=/app
+      - MODEL_WEIGHTS_DIR=/app/model_weights
+      - YOLO_WEIGHTS=yolo_best.pt
+      - CRACK_YOLO_WEIGHTS=crack_best.pt
       - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
       - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}
       - DEBUG=false
