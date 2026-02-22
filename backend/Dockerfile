@@ -22,10 +22,12 @@ RUN apt-get -o Acquire::Retries=3 update && apt-get install -y --no-install-reco
     libsm6 \
     libxext6 \
     libxrender-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for Python dependency installation
+ENV PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 RUN pip install uv
 
 WORKDIR /app/backend
@@ -33,7 +35,7 @@ ENV PYTHONPATH=/app/backend
 
 # Install Python ML dependencies
 COPY pyproject.toml ./
-RUN uv pip install --system -e .
+RUN uv pip install --system -e . && rm -rf /root/.cache/uv /root/.cache/pip
 
 # Copy ML modules and worker script
 COPY app ./app
