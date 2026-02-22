@@ -21,6 +21,7 @@ services:
       - ./static:/app/static
       - tunnel_db:/app/backend/data
     environment:
+      - BASE_DIR=/app
       - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
       - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}
       - DEBUG=false

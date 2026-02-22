@@ -31,7 +31,8 @@ ENV PIP_NO_CACHE_DIR=1 \
 RUN pip install uv
 
 WORKDIR /app/backend
-ENV PYTHONPATH=/app/backend
+ENV PYTHONPATH=/app/backend \
+    BASE_DIR=/app
 
 # Install Python ML dependencies
 COPY pyproject.toml ./
