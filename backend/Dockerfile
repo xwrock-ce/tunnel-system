@@ -16,8 +16,8 @@ RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /out/tunnel-server ./cmd/s
 FROM python:3.11-slim
 
 # System dependencies required by OpenCV / torch runtime
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+RUN apt-get -o Acquire::Retries=3 update && apt-get install -y --no-install-recommends \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
