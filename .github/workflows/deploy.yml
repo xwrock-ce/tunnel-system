@@ -33,7 +33,7 @@ jobs:
             ghcr.io/xwrock-ce/tunnel-system-backend
           tags: |
             type=raw,value=main
-            type=sha
+            type=raw,value=${{ github.sha }}
 
       - name: Build and push backend
         uses: docker/build-push-action@v6
@@ -52,7 +52,7 @@ jobs:
             ghcr.io/xwrock-ce/tunnel-system-frontend
           tags: |
             type=raw,value=main
-            type=sha
+            type=raw,value=${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
