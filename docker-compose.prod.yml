@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: ghcr.io/xwrock-ce/tunnel-system-frontend:${IMAGE_TAG:-main}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - tunnel-net
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/xwrock-ce/tunnel-system-backend:${IMAGE_TAG:-main}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./model_weights:/app/model_weights:ro
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+      - tunnel_db:/app/backend/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
+      - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}
+      - DEBUG=false
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+    networks:
+      - tunnel-net
+    restart: unless-stopped
+
+volumes:
+  tunnel_db:
+
+networks:
+  tunnel-net:
+    driver: bridge
