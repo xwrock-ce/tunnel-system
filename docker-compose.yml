@@ -32,6 +32,7 @@ services:
       - DEBUG=false
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - PYTHONPATH=/app/backend
     networks:
       - tunnel-net
     restart: unless-stopped

@@ -29,6 +29,7 @@ RUN apt-get -o Acquire::Retries=3 update && apt-get install -y --no-install-reco
 RUN pip install uv
 
 WORKDIR /app/backend
+ENV PYTHONPATH=/app/backend
 
 # Install Python ML dependencies
 COPY pyproject.toml ./
