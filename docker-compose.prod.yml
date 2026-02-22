@@ -4,7 +4,7 @@ services:
   frontend:
     image: ghcr.io/xwrock-ce/tunnel-system-frontend:${IMAGE_TAG:-main}
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
