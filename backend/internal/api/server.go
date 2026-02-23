@@ -127,21 +127,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	err := s.db.Where("username = ?", req.Username).First(&user).Error
-	if err != nil || !auth.VerifyPasswordHash(req.Password, user.PasswordHash) {
-		w.Header().Set("WWW-Authenticate", "Bearer")
-		writeDetailError(w, http.StatusUnauthorized, "Incorrect username or password")
-		return
-	}
-
-	token, err := s.authManager.CreateAccessToken(user.Username)
-	if err != nil {
-		writeDetailError(w, http.StatusInternalServerError, "Failed to create token")
-		return
-	}
-
-	writeJSON(w, http.StatusOK, tokenResponse{AccessToken: token, TokenType: "bearer"})
+	s.issueAccessToken(w, req.Username, req.Password)
 }
 
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
@@ -156,6 +142,10 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.issueAccessToken(w, username, password)
+}
+
+func (s *Server) issueAccessToken(w http.ResponseWriter, username, password string) {
 	var user models.User
 	err := s.db.Where("username = ?", username).First(&user).Error
 	if err != nil || !auth.VerifyPasswordHash(password, user.PasswordHash) {

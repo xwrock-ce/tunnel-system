@@ -113,6 +113,8 @@ func runMigrations(db *gorm.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON analyses(user_id);`,
 		`CREATE INDEX IF NOT EXISTS idx_analyses_status ON analyses(status);`,
 		`CREATE INDEX IF NOT EXISTS idx_analyses_excavation_status ON analyses(excavation_status);`,
+		`CREATE INDEX IF NOT EXISTS idx_analyses_user_created_at ON analyses(user_id, created_at);`,
+		`CREATE INDEX IF NOT EXISTS idx_analyses_user_status ON analyses(user_id, status);`,
 	}
 
 	for _, statement := range statements {
