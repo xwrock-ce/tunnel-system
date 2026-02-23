@@ -234,56 +234,63 @@ type Stats struct {
 
 func (s *AnalysisService) GetStats(userID uint) (Stats, error) {
 	stats := Stats{}
-	now := time.Now().UTC()
-	today := now.Format("2006-01-02")
-	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
 
-	type statsRow struct {
-		TotalAnalyses        int64    `gorm:"column:total_analyses"`
-		TodayAnalyses        int64    `gorm:"column:today_analyses"`
-		YesterdayAnalyses    int64    `gorm:"column:yesterday_analyses"`
-		OverExcavationCount  int64    `gorm:"column:over_excavation_count"`
-		UnderExcavationCount int64    `gorm:"column:under_excavation_count"`
-		NormalCount          int64    `gorm:"column:normal_count"`
-		AvgDifference        *float64 `gorm:"column:avg_difference_percent"`
-	}
-
-	var row statsRow
-	err := s.db.Model(&models.Analysis{}).
-		Select(
-			`COUNT(*) as total_analyses,
-			COALESCE(SUM(CASE WHEN date(created_at) = ? THEN 1 ELSE 0 END), 0) as today_analyses,
-			COALESCE(SUM(CASE WHEN date(created_at) = ? THEN 1 ELSE 0 END), 0) as yesterday_analyses,
-			COALESCE(SUM(CASE WHEN excavation_status = ? THEN 1 ELSE 0 END), 0) as over_excavation_count,
-			COALESCE(SUM(CASE WHEN excavation_status = ? THEN 1 ELSE 0 END), 0) as under_excavation_count,
-			COALESCE(SUM(CASE WHEN excavation_status = ? THEN 1 ELSE 0 END), 0) as normal_count,
-			AVG(difference_percent) as avg_difference_percent`,
-			today,
-			yesterday,
-			models.ExcavationStatusOver,
-			models.ExcavationStatusUnder,
-			models.ExcavationStatusNormal,
-		).
-		Where("user_id = ?", userID).
-		Scan(&row).Error
-	if err != nil {
+	if err := s.db.Model(&models.Analysis{}).Where("user_id = ?", userID).Count(&stats.TotalAnalyses).Error; err != nil {
 		return stats, err
 	}
 
-	stats.TotalAnalyses = row.TotalAnalyses
-	stats.TodayAnalyses = row.TodayAnalyses
-	stats.YesterdayAnalyses = row.YesterdayAnalyses
-	stats.OverExcavationCount = row.OverExcavationCount
-	stats.UnderExcavationCount = row.UnderExcavationCount
-	stats.NormalCount = row.NormalCount
-	if row.AvgDifference != nil {
-		stats.AvgDifferencePercent = math.Round((*row.AvgDifference)*100) / 100
+	today := time.Now().UTC().Format("2006-01-02")
+	yesterday := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02")
+
+	if err := s.db.Model(&models.Analysis{}).
+		Where("user_id = ? AND date(created_at) = ?", userID, today).
+		Count(&stats.TodayAnalyses).Error; err != nil {
+		return stats, err
+	}
+
+	if err := s.db.Model(&models.Analysis{}).
+		Where("user_id = ? AND date(created_at) = ?", userID, yesterday).
+		Count(&stats.YesterdayAnalyses).Error; err != nil {
+		return stats, err
 	}
 
 	if stats.YesterdayAnalyses > 0 {
 		v := (float64(stats.TodayAnalyses-stats.YesterdayAnalyses) / float64(stats.YesterdayAnalyses)) * 100
 		v = math.Round(v*10) / 10
 		stats.TodayVsYesterdayPercent = &v
+	}
+
+	if err := s.db.Model(&models.Analysis{}).
+		Where("user_id = ? AND excavation_status = ?", userID, models.ExcavationStatusOver).
+		Count(&stats.OverExcavationCount).Error; err != nil {
+		return stats, err
+	}
+
+	if err := s.db.Model(&models.Analysis{}).
+		Where("user_id = ? AND excavation_status = ?", userID, models.ExcavationStatusUnder).
+		Count(&stats.UnderExcavationCount).Error; err != nil {
+		return stats, err
+	}
+
+	if err := s.db.Model(&models.Analysis{}).
+		Where("user_id = ? AND excavation_status = ?", userID, models.ExcavationStatusNormal).
+		Count(&stats.NormalCount).Error; err != nil {
+		return stats, err
+	}
+
+	var avg struct {
+		Value *float64 `gorm:"column:value"`
+	}
+	if err := s.db.Model(&models.Analysis{}).
+		Select("avg(difference_percent) as value").
+		Where("user_id = ? AND difference_percent IS NOT NULL", userID).
+		Take(&avg).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return stats, err
+		}
+	}
+	if avg.Value != nil {
+		stats.AvgDifferencePercent = math.Round((*avg.Value)*100) / 100
 	}
 
 	return stats, nil
@@ -374,19 +381,31 @@ type Distribution struct {
 }
 
 func (s *AnalysisService) GetDeviationDistribution(userID uint) (Distribution, error) {
-	d := Distribution{}
-	err := s.db.Model(&models.Analysis{}).
-		Select(
-			`COALESCE(SUM(CASE WHEN difference_percent > 5 THEN 1 ELSE 0 END), 0) as severe_over_count,
-			COALESCE(SUM(CASE WHEN difference_percent > 2 AND difference_percent <= 5 THEN 1 ELSE 0 END), 0) as minor_over_count,
-			COALESCE(SUM(CASE WHEN difference_percent >= -2 AND difference_percent <= 2 THEN 1 ELSE 0 END), 0) as normal_count,
-			COALESCE(SUM(CASE WHEN difference_percent >= -5 AND difference_percent < -2 THEN 1 ELSE 0 END), 0) as minor_under_count,
-			COALESCE(SUM(CASE WHEN difference_percent < -5 THEN 1 ELSE 0 END), 0) as severe_under_count`,
-		).
-		Where("user_id = ? AND status = ? AND difference_percent IS NOT NULL", userID, models.AnalysisStatusCompleted).
-		Scan(&d).Error
+	var analyses []models.Analysis
+	err := s.db.Where("user_id = ? AND status = ? AND difference_percent IS NOT NULL", userID, models.AnalysisStatusCompleted).
+		Find(&analyses).Error
 	if err != nil {
 		return Distribution{}, err
+	}
+
+	d := Distribution{}
+	for _, analysis := range analyses {
+		diff := 0.0
+		if analysis.DifferencePercent != nil {
+			diff = *analysis.DifferencePercent
+		}
+		switch {
+		case diff > 5.0:
+			d.SevereOverCount++
+		case diff > 2.0:
+			d.MinorOverCount++
+		case diff >= -2.0:
+			d.NormalCount++
+		case diff >= -5.0:
+			d.MinorUnderCount++
+		default:
+			d.SevereUnderCount++
+		}
 	}
 	return d, nil
 }

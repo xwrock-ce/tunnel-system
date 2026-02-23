@@ -1,5 +1,4 @@
 """Application configuration settings."""
-from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 from pathlib import Path
 from functools import lru_cache
@@ -70,7 +69,9 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 20 * 1024 * 1024  # 20MB
     ALLOWED_EXTENSIONS: set = {"jpg", "jpeg", "png", "bmp", "tiff"}
 
-    model_config = ConfigDict(env_file=".env", case_sensitive=True)
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
 
 
 @lru_cache()
