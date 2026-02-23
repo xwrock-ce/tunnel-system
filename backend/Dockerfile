@@ -32,7 +32,8 @@ RUN pip install uv
 
 WORKDIR /app/backend
 ENV PYTHONPATH=/app/backend \
-    BASE_DIR=/app
+    BASE_DIR=/app \
+    SAM2_REPO_PATH=/app/backend/third_party/sam2
 
 # Install Python ML dependencies
 COPY pyproject.toml ./
@@ -41,6 +42,7 @@ RUN uv pip install --system -e . && rm -rf /root/.cache/uv /root/.cache/pip
 # Copy ML modules and worker script
 COPY app ./app
 COPY ml_worker ./ml_worker
+COPY third_party/sam2 ./third_party/sam2
 
 # Copy Go server binary
 COPY --from=go-builder /out/tunnel-server /usr/local/bin/tunnel-server

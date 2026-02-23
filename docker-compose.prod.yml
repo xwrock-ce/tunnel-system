@@ -22,6 +22,7 @@ services:
       - tunnel_db:/app/backend/data
     environment:
       - BASE_DIR=/app
+      - SAM2_REPO_PATH=/app/backend/third_party/sam2
       - MODEL_WEIGHTS_DIR=/app/model_weights
       - YOLO_WEIGHTS=yolo_best.pt
       - CRACK_YOLO_WEIGHTS=crack_best.pt

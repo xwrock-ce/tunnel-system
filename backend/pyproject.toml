@@ -5,11 +5,12 @@ description = "Tunnel ML worker used by the Go backend (YOLOv11 + SAM2)"
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "ultralytics>=8.0.0",
-    "torch>=2.0.0",
-    "torchvision>=0.15.0",
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
     "opencv-python>=4.8.0",
-    "numpy>=1.24.0",
+    "numpy>=1.24.4",
     "pillow>=10.0.0",
+    "tqdm>=4.66.1",
     "pydantic-settings>=2.0.0",
     # Required by external SAM2 repo import/build path.
     "hydra-core>=1.3.2",
