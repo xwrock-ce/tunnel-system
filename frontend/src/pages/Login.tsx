@@ -17,8 +17,8 @@ import { API_BASE_URL } from '@/api/client'
 const { Title, Text } = Typography
 
 const keyStats = [
-  { value: '98.7%', label: '识别准确率' },
-  { value: '2.1s', label: '平均分析耗时' },
+  { value: '96.8%', label: '识别准确率' },
+  { value: '5.6s', label: '平均分析耗时' },
   { value: '320+', label: '日均处理任务' },
 ]
 
