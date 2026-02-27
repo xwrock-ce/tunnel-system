@@ -315,8 +315,6 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   deleteAnalysis: async (id) => {
     try {
       await analysisApi.delete(id)
-      // Refresh list
-      await get().fetchAnalyses(get().currentPage)
       return true
     } catch {
       return false

@@ -5,6 +5,7 @@ import {
 } from 'antd'
 import { EyeOutlined, DeleteOutlined, ReloadOutlined, DownloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
+import type { TableRowSelection } from 'antd/es/table/interface'
 import dayjs from 'dayjs'
 import { useAnalysisStore } from '@/stores/useAnalysisStore'
 import { AnalysisListItem } from '@/api/client'
@@ -21,6 +22,7 @@ const History: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | undefined>()
   const [searchInput, setSearchInput] = useState<string>('')
   const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [savedFilters, setSavedFilters] = useState<Array<{ key: string; label: string; status?: string; keyword: string }>>([])
 
   const {
@@ -55,6 +57,10 @@ const History: React.FC = () => {
   useEffect(() => {
     fetchAnalyses(1, statusFilter, searchKeyword)
   }, [fetchAnalyses, statusFilter, searchKeyword])
+
+  useEffect(() => {
+    setSelectedRowKeys([])
+  }, [currentPage, statusFilter, searchKeyword])
 
   useEffect(() => {
     const raw = window.localStorage.getItem('history_saved_filters')
@@ -112,6 +118,10 @@ const History: React.FC = () => {
 
   const canOpenReport = (record: AnalysisListItem) => record.status === 'completed'
 
+  const refreshCurrentList = async () => {
+    await fetchAnalyses(currentPage, statusFilter, searchKeyword)
+  }
+
   const handleDelete = (id: number) => {
     Modal.confirm({
       title: '确认删除',
@@ -122,9 +132,39 @@ const History: React.FC = () => {
       onOk: async () => {
         const success = await deleteAnalysis(id)
         if (success) {
+          setSelectedRowKeys((prev) => prev.filter((key) => Number(key) !== id))
+          await refreshCurrentList()
           message.success('删除成功')
         } else {
           message.error('删除失败')
+        }
+      },
+    })
+  }
+
+  const handleBatchDelete = () => {
+    const ids = selectedRowKeys.map(Number)
+    if (ids.length === 0) return
+
+    Modal.confirm({
+      title: '批量删除',
+      content: `确定要删除选中的 ${ids.length} 条分析记录吗？此操作不可恢复。`,
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        const results = await Promise.all(ids.map(id => deleteAnalysis(id)))
+        const successCount = results.filter(Boolean).length
+        const failedCount = results.length - successCount
+
+        setSelectedRowKeys([])
+        await refreshCurrentList()
+
+        if (successCount > 0) {
+          message.success(`成功删除 ${successCount} 条记录`)
+        }
+        if (failedCount > 0) {
+          message.warning(`${failedCount} 条记录删除失败，请重试`)
         }
       },
     })
@@ -266,6 +306,11 @@ const History: React.FC = () => {
           ? UI_COPY.history.filters.normal
           : UI_COPY.history.filters.all
 
+  const rowSelection: TableRowSelection<AnalysisListItem> = {
+    selectedRowKeys,
+    onChange: (keys) => setSelectedRowKeys(keys),
+  }
+
   return (
     <div className="history-page">
       <div className="page-header">
@@ -344,6 +389,14 @@ const History: React.FC = () => {
               >
                 导出当前页
               </Button>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={handleBatchDelete}
+                disabled={selectedRowKeys.length === 0}
+              >
+                删除已选{selectedRowKeys.length > 0 ? ` (${selectedRowKeys.length})` : ''}
+              </Button>
             </Space>
           </div>
         </div>
@@ -355,10 +408,11 @@ const History: React.FC = () => {
           dataSource={analyses}
           className="history-table"
           rowKey="id"
+          rowSelection={rowSelection}
           loading={isLoadingList}
           size="middle"
           sticky
-          scroll={{ x: 980 }}
+          scroll={{ x: 1060 }}
           locale={{
             emptyText: (
               <StatePanel
@@ -372,7 +426,17 @@ const History: React.FC = () => {
           }}
           rowClassName={(record) => (canOpenReport(record) ? 'table-row-clickable' : 'table-row-disabled')}
           onRow={(record) => ({
-            onClick: () => {
+            onClick: (event) => {
+              const target = event.target as HTMLElement
+              if (
+                target.closest('.ant-table-selection-column') ||
+                target.closest('.history-table-actions') ||
+                target.closest('button') ||
+                target.closest('a')
+              ) {
+                return
+              }
+
               if (canOpenReport(record)) {
                 navigate(`/report/${record.id}`)
               }

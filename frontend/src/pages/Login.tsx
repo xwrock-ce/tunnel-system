@@ -231,7 +231,8 @@ const Login: React.FC = () => {
                 onFinish={onFinish}
                 layout="vertical"
                 size="large"
-                initialValues={{ username: 'admin', password: 'admin123', remember: true }}
+                initialValues={{ remember: false }}
+                autoComplete="off"
                 requiredMark={false}
                 className="login-v4__form"
               >
@@ -250,7 +251,7 @@ const Login: React.FC = () => {
                     prefix={<UserOutlined className="login-v4__input-icon" />}
                     placeholder="用户名 / 邮箱"
                     className="login-v4__input"
-                    autoComplete="username"
+                    autoComplete="off"
                   />
                 </Form.Item>
 
@@ -259,7 +260,7 @@ const Login: React.FC = () => {
                     prefix={<LockOutlined className="login-v4__input-icon" />}
                     placeholder="请输入密码"
                     className="login-v4__input"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                   />
                 </Form.Item>
 

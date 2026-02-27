@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 
     # Default admin credentials
-    ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin123"
+    ADMIN_USERNAME: str = "rockxw"
+    ADMIN_PASSWORD: str = "csustxw"
 
     # Paths
     BASE_DIR: Path = _infer_base_dir()

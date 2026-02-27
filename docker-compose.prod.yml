@@ -29,8 +29,8 @@ services:
       - DATABASE_URL=sqlite+aiosqlite:///./data/tunnel.db
       - SECRET_KEY=${SECRET_KEY:-tunnel-excavation-secret-key-change-in-production}
       - DEBUG=false
-      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-rockxw}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-csustxw}
       - PYTHONPATH=/app/backend
     networks:
       - tunnel-net
