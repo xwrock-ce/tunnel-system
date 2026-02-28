@@ -91,8 +91,21 @@ jobs:
 
             echo "$GHCR_PAT" | docker login ghcr.io -u xwrock-ce --password-stdin
 
+            echo "Disk usage before cleanup:"
+            df -h
+            docker system df || true
+
+            echo "Pruning unused Docker data to free space..."
+            docker container prune -f || true
+            docker image prune -af || true
+            docker builder prune -af || true
+
+            echo "Disk usage after cleanup:"
+            df -h
+            docker system df || true
+
             IMAGE_TAG="$GITHUB_SHA" docker compose -f docker-compose.prod.yml pull
-            IMAGE_TAG="$GITHUB_SHA" docker compose -f docker-compose.prod.yml up -d
+            IMAGE_TAG="$GITHUB_SHA" docker compose -f docker-compose.prod.yml up -d --remove-orphans
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GITHUB_SHA: ${{ github.sha }}
