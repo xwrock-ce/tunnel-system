@@ -75,19 +75,43 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           timeout: 180m
           command_timeout: 180m
-          envs: GHCR_PAT,GITHUB_SHA
+          envs: GHCR_PAT,GITHUB_SHA,GITHUB_REPOSITORY,REPO_URL,REPO_BRANCH
           script: |
             set -euo pipefail
 
             DEPLOY_PATH="/srv/tunnel-system"
+            REPO_URL="${REPO_URL:-https://github.com/${GITHUB_REPOSITORY}.git}"
+            REPO_BRANCH="${REPO_BRANCH:-main}"
+
+            mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
 
-            mkdir -p model_weights uploads static
-
-            if command -v git >/dev/null 2>&1 && [ -d .git ]; then
-              git fetch --all || true
-              git reset --hard origin/main || true
+            if command -v git >/dev/null 2>&1; then
+              if [ -d .git ]; then
+                echo "Existing git repo found, syncing latest code..."
+                git fetch --all --prune || true
+                git reset --hard "origin/${REPO_BRANCH}" || true
+              elif [ -f docker-compose.prod.yml ]; then
+                echo "Existing deployment files found (non-git), skip clone."
+              else
+                echo "Deployment directory is not initialized, cloning repository..."
+                TMP_PATH="/tmp/tunnel-system-${GITHUB_SHA}"
+                rm -rf "$TMP_PATH"
+                git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$TMP_PATH"
+                rm -rf "$DEPLOY_PATH"
+                mv "$TMP_PATH" "$DEPLOY_PATH"
+                cd "$DEPLOY_PATH"
+              fi
+            else
+              echo "ERROR: git is not installed on the server."
+              exit 1
             fi
+
+            if [ ! -f .env ] && [ -f .env.example ]; then
+              cp .env.example .env
+            fi
+
+            mkdir -p model_weights uploads static
 
             echo "$GHCR_PAT" | docker login ghcr.io -u xwrock-ce --password-stdin
 
@@ -109,3 +133,6 @@ jobs:
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          REPO_URL: https://github.com/${{ github.repository }}.git
+          REPO_BRANCH: main

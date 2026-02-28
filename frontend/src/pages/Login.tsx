@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons'
 import LoginPortalIcon from '@/components/icons/LoginPortalIcon'
 import { API_BASE_URL } from '@/api/client'
+import { getRememberMePreference } from '@/utils/authToken'
 
 const { Title, Text } = Typography
 
@@ -127,7 +128,7 @@ const Login: React.FC = () => {
     }
   }, [])
 
-  const onFinish = async (values: { username: string; password: string }) => {
+  const onFinish = async (values: { username: string; password: string; remember?: boolean }) => {
     if (backendStatus === 'down') {
       message.open({
         type: 'warning',
@@ -231,8 +232,8 @@ const Login: React.FC = () => {
                 onFinish={onFinish}
                 layout="vertical"
                 size="large"
-                initialValues={{ remember: false }}
-                autoComplete="off"
+                initialValues={{ remember: getRememberMePreference() }}
+                autoComplete="on"
                 requiredMark={false}
                 className="login-v4__form"
               >
@@ -251,7 +252,7 @@ const Login: React.FC = () => {
                     prefix={<UserOutlined className="login-v4__input-icon" />}
                     placeholder="用户名 / 邮箱"
                     className="login-v4__input"
-                    autoComplete="off"
+                    autoComplete="username"
                   />
                 </Form.Item>
 
@@ -260,7 +261,7 @@ const Login: React.FC = () => {
                     prefix={<LockOutlined className="login-v4__input-icon" />}
                     placeholder="请输入密码"
                     className="login-v4__input"
-                    autoComplete="new-password"
+                    autoComplete="current-password"
                   />
                 </Form.Item>
 

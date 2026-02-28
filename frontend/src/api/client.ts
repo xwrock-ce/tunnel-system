@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { clearStoredToken, getStoredToken } from '@/utils/authToken'
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
@@ -21,7 +22,7 @@ const apiClient = axios.create({
 // Request interceptor - add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = getStoredToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -35,9 +36,17 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      const requestUrl = error.config?.url || ''
+      const isLoginRequest = requestUrl.includes('/api/v1/auth/login') || requestUrl.includes('/api/v1/auth/token')
+
+      if (!isLoginRequest) {
+        clearStoredToken()
+        localStorage.removeItem('auth-storage')
+
+        if (window.location.pathname !== '/login') {
+          window.location.assign('/login')
+        }
+      }
     }
     return Promise.reject(error)
   }
