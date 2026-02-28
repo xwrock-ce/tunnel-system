@@ -129,7 +129,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := s.db.Where("username = ?", req.Username).First(&user).Error
-	if err != nil || !auth.VerifyPasswordHash(req.Password, user.PasswordHash) {
+	if err != nil || !user.IsActive || !auth.VerifyPasswordHash(req.Password, user.PasswordHash) {
 		w.Header().Set("WWW-Authenticate", "Bearer")
 		writeDetailError(w, http.StatusUnauthorized, "Incorrect username or password")
 		return
@@ -158,7 +158,7 @@ func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := s.db.Where("username = ?", username).First(&user).Error
-	if err != nil || !auth.VerifyPasswordHash(password, user.PasswordHash) {
+	if err != nil || !user.IsActive || !auth.VerifyPasswordHash(password, user.PasswordHash) {
 		w.Header().Set("WWW-Authenticate", "Bearer")
 		writeDetailError(w, http.StatusUnauthorized, "Incorrect username or password")
 		return

@@ -14,6 +14,11 @@ import (
 	"tunnel-system/backend/internal/models"
 )
 
+const (
+	legacyDefaultAdminUsername = "admin"
+	legacyDefaultAdminPassword = "admin123"
+)
+
 func Open(cfg *config.Config) (*gorm.DB, error) {
 	gormLogger := logger.Default.LogMode(logger.Silent)
 	if cfg.Debug {
@@ -48,25 +53,71 @@ func Open(cfg *config.Config) (*gorm.DB, error) {
 func ensureAdminUser(db *gorm.DB, username, password string) error {
 	var existing models.User
 	err := db.Where("username = ?", username).First(&existing).Error
-	if err == nil {
-		return nil
-	}
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("query admin user: %w", err)
 	}
 
-	hash, hashErr := auth.HashPassword(password)
-	if hashErr != nil {
-		return fmt.Errorf("hash admin password: %w", hashErr)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		hash, hashErr := auth.HashPassword(password)
+		if hashErr != nil {
+			return fmt.Errorf("hash admin password: %w", hashErr)
+		}
+
+		admin := models.User{
+			Username:     username,
+			PasswordHash: hash,
+			IsActive:     true,
+		}
+		if createErr := db.Create(&admin).Error; createErr != nil {
+			return fmt.Errorf("create admin user: %w", createErr)
+		}
+	} else {
+		needResetPassword := !auth.VerifyPasswordHash(password, existing.PasswordHash)
+		needActivateUser := !existing.IsActive
+		if needResetPassword || needActivateUser {
+			hash, hashErr := auth.HashPassword(password)
+			if hashErr != nil {
+				return fmt.Errorf("hash admin password: %w", hashErr)
+			}
+
+			updates := map[string]interface{}{
+				"password_hash": hash,
+				"is_active":     true,
+			}
+			if updateErr := db.Model(&existing).Updates(updates).Error; updateErr != nil {
+				return fmt.Errorf("update admin user: %w", updateErr)
+			}
+		}
 	}
 
-	admin := models.User{
-		Username:     username,
-		PasswordHash: hash,
-		IsActive:     true,
+	if err := deactivateLegacyDefaultAdminIfNeeded(db, username, password); err != nil {
+		return err
 	}
-	if createErr := db.Create(&admin).Error; createErr != nil {
-		return fmt.Errorf("create admin user: %w", createErr)
+	return nil
+}
+
+func deactivateLegacyDefaultAdminIfNeeded(db *gorm.DB, configuredUsername, configuredPassword string) error {
+	if configuredUsername == legacyDefaultAdminUsername && configuredPassword == legacyDefaultAdminPassword {
+		return nil
+	}
+
+	var legacyAdmin models.User
+	err := db.Where("username = ?", legacyDefaultAdminUsername).First(&legacyAdmin).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("query legacy admin user: %w", err)
+	}
+	if !legacyAdmin.IsActive {
+		return nil
+	}
+	if !auth.VerifyPasswordHash(legacyDefaultAdminPassword, legacyAdmin.PasswordHash) {
+		return nil
+	}
+
+	if err := db.Model(&legacyAdmin).Update("is_active", false).Error; err != nil {
+		return fmt.Errorf("deactivate legacy admin user: %w", err)
 	}
 
 	return nil

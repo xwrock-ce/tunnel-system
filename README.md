@@ -33,7 +33,7 @@ place them under `model_weights/`. Filenames are read from `.env`:
 - `CRACK_YOLO_WEIGHTS` for crack detection (default `crack_best.pt`)
 
 ## Quick start (local dev)
-Prereqs: Go 1.22+, Python 3.12, Node 20+, and `uv` installed.
+Prereqs: Go 1.26+, Python 3.12, Node 20+, and `uv` installed.
 
 1. Copy env file:
    `cp .env.example .env`
@@ -84,7 +84,7 @@ Key environment variables (see `.env.example`):
 
 ## Notes
 - The database is SQLite by default and is initialized on startup.
-- The default admin user is created automatically if missing.
+- The configured admin user is created automatically if missing and synced to `.env` credentials on startup.
 
 ## Troubleshooting
 - `YOLO weights not found` means the file is missing in `model_weights/` or the
@@ -94,3 +94,6 @@ Key environment variables (see `.env.example`):
   If strict mode is disabled, the pipeline falls back to YOLO masks.
 - If the backend starts but analysis fails, verify the two required weight files
   and their names.
+- If old admin credentials still work after deployment, check server `.env` values and persistent DB data.
+  In this repo, deployment can sync `ADMIN_USERNAME`/`ADMIN_PASSWORD` from GitHub Secrets, and backend startup will
+  sync configured admin credentials into the `users` table.

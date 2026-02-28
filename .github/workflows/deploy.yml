@@ -75,7 +75,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           timeout: 180m
           command_timeout: 180m
-          envs: GHCR_PAT,GITHUB_SHA,GITHUB_REPOSITORY,REPO_URL,REPO_BRANCH
+          envs: GHCR_PAT,GITHUB_SHA,GITHUB_REPOSITORY,REPO_URL,REPO_BRANCH,ADMIN_USERNAME,ADMIN_PASSWORD
           script: |
             set -euo pipefail
 
@@ -110,6 +110,33 @@ jobs:
             if [ ! -f .env ] && [ -f .env.example ]; then
               cp .env.example .env
             fi
+            if [ ! -f .env ]; then
+              touch .env
+            fi
+
+            upsert_env_var() {
+              local key="$1"
+              local value="$2"
+              local file=".env"
+              local tmp_file
+              tmp_file="$(mktemp)"
+
+              awk -v k="$key" -v v="$value" '
+                BEGIN { updated = 0 }
+                $0 ~ ("^" k "=") { print k "=" v; updated = 1; next }
+                { print }
+                END { if (!updated) print k "=" v }
+              ' "$file" > "$tmp_file"
+
+              mv "$tmp_file" "$file"
+            }
+
+            if [ -n "${ADMIN_USERNAME:-}" ]; then
+              upsert_env_var "ADMIN_USERNAME" "$ADMIN_USERNAME"
+            fi
+            if [ -n "${ADMIN_PASSWORD:-}" ]; then
+              upsert_env_var "ADMIN_PASSWORD" "$ADMIN_PASSWORD"
+            fi
 
             mkdir -p model_weights uploads static
 
@@ -136,3 +163,5 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           REPO_URL: https://github.com/${{ github.repository }}.git
           REPO_BRANCH: main
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
