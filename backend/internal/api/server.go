@@ -69,6 +69,9 @@ func (s *Server) Router() http.Handler {
 
 	r.Get("/", s.handleRoot)
 	r.Get("/health", s.handleHealth)
+	r.Get("/docs", s.handleDocs)
+	r.Get("/docs/", s.handleDocs)
+	r.Get("/openapi.yaml", s.handleOpenAPI)
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir(s.cfg.StaticDir))))
 
 	r.Route(s.cfg.APIV1Prefix, func(r chi.Router) {

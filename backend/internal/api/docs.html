@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tunnel System API Docs</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #f5f7fb;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      .topbar h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .topbar a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      .hint {
+        padding: 10px 20px;
+        background: #dbeafe;
+        color: #1e3a8a;
+        border-bottom: 1px solid #bfdbfe;
+        font-size: 14px;
+      }
+      #swagger-ui {
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1>Tunnel System OpenAPI Docs</h1>
+      <a href="/openapi.yaml" target="_blank" rel="noreferrer">View raw OpenAPI YAML</a>
+    </div>
+    <div class="hint">
+      Bearer-auth routes can be tested here after logging in and pasting the token into the <strong>Authorize</strong> dialog.
+    </div>
+    <div id="swagger-ui"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = function () {
+        const specUrl = new URL('/openapi.yaml', window.location.origin).toString()
+        window.ui = SwaggerUIBundle({
+          url: specUrl,
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          persistAuthorization: true,
+          docExpansion: 'list',
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout'
+        })
+      }
+    </script>
+  </body>
+</html>
